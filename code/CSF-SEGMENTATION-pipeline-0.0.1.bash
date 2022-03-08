@@ -1,4 +1,4 @@
-#!/bin/sh -f
+#!/bin/bash
 
 CASE=FCB028 # ${1}
 BASE_DIR=/neuro/labs/grantlab/research/MRI_processing/jose.cisneros/CSFSegmentation/Samples # ${2}
@@ -18,16 +18,15 @@ INPUT_NAME=recon_to31
 INPUT_SEG_NAME=segmentation_to31_final
 
 # Setup Dependencies
-source /neuro/labs/grantlab/research/HyukJin_MRI/CIVET/quarantines/Linux-x86_64/init.sh
+/neuro/labs/grantlab/research/HyukJin_MRI/CIVET/quarantines/Linux-x86_64/init.sh
 
-"###############################"
+###############################
 # Labels:
 # 1: Left-Cerebral-Exterior
 # 42: Right-Cerebral-Exterior
 # 160: Right-Cerebral-WM-unmyelinated
 # 161: Left-Cerebral-WM-myelinated
-
-"###############################"
+###############################
 
 # Conversion from .nii to .mnc
 ${RESOURCES_DIR}/bin/nii2mnc -clobber ${BASE_DIR}/${CASE}/${INPUT_NAME}.nii ${TARGET_DIR}/${CASE}/input/${INPUT_NAME}.mnc -double
@@ -77,7 +76,7 @@ mincmath -sub ${TARGET_DIR}/${CASE}/temp/CSFmeanall.mnc ${TARGET_DIR}/${CASE}/te
 # Remove all negative areas (inner part).
 mincmath -gt -const 0 ${TARGET_DIR}/${CASE}/temp/CSFfirstguess_tmp.mnc -clobber ${TARGET_DIR}/${CASE}/temp/CSFfirstguess_tmp2.mnc
 # Remove noise.
-mincmorph -filetype -successive DEED ${TARGET_DIR}/${CASE}/temp/CSFfirstguess_tmp2.mnc ${TARGET_DIR}/${CASE}/temp/CSFfirstguess.mnc -clobber
+mincmorph -filetype -successive DEED ${TARGET_DIR}/${CASE}/temp/CSFfirstguess_tmp2.mnc -clobber ${TARGET_DIR}/${CASE}/temp/CSFfirstguess.mnc
 
 exit 0
 # mincmorph -group ${TARGET_DIR}/${CASE}/temp/CSFmeanall.mnc ${TARGET_DIR}/${CASE}/temp/tmp.mnc -clobber
