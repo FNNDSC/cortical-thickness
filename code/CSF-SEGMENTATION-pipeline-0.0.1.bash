@@ -107,6 +107,9 @@ ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/temp/csf_and_gm_with_intensit
 gzip -k ${TARGET_DIR}/${CASE}/temp/csf_and_gm_with_intensity1.nii --verbose
 #### Skeleton
 ${RESOURCES_DIR}/bin/brainvisa-4.5.0/bin/VipSkeleton -i ${TARGET_DIR}/${CASE}/temp/csf_and_gm_with_intensity1.nii.gz -so ${TARGET_DIR}/${CASE}/temp/skeleton_1.nii -vo ${TARGET_DIR}/${CASE}/temp/roots.nii -g ${TARGET_DIR}/${CASE}/temp/initial_segmentations_sides_joined.nii -p c -wp 0 -lz 0 -lu 10 -e 0.5 -mct 0 -gct -10
+# Binarize Skeleton
+${RESOURCES_DIR}/bin/nii2mnc -clobber ${TARGET_DIR}/${CASE}/temp/skeleton_1.nii ${TARGET_DIR}/${CASE}/temp/skeleton_1_.mnc -double
+minccalc -clobber -expression 'if(A[0]>11.5){out=1}else{out=0}' ${TARGET_DIR}/${CASE}/temp/skeleton_1_.mnc ${TARGET_DIR}/${CASE}/temp/skeleton_1_corr.mnc
 
 # Second Test: Obtain an estimation of CSF merged with GM removing whitematter from brain extraction.
 minccalc -expression 'if(A[0]>0&&A[1]==1){out=0}else if(A[0]==0){out=0}else{out=1}' ${TARGET_DIR}/${CASE}/input/${INPUT_NAME_POSPROCESS}.mnc ${TARGET_DIR}/${CASE}/temp/cerebral_int.mnc ${TARGET_DIR}/${CASE}/temp/csf_and_gm_with_wm.mnc -clobber
@@ -116,6 +119,9 @@ ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/temp/csf_and_gm_with_wm_grays
 gzip -k ${TARGET_DIR}/${CASE}/temp/csf_and_gm_with_wm1.nii --verbose
 #### Skeleton
 ${RESOURCES_DIR}/bin/brainvisa-4.5.0/bin/VipSkeleton -i ${TARGET_DIR}/${CASE}/temp/csf_and_gm_with_wm1.nii -so ${TARGET_DIR}/${CASE}/temp/skeleton_2.nii -g ${TARGET_DIR}/${CASE}/temp/initial_segmentations_sides_joined.nii -p c -wp 0 -lz 0 -lu 10 -e 0.5 -mct 0 -gct -10
+# Binarize Skeleton
+${RESOURCES_DIR}/bin/nii2mnc -clobber ${TARGET_DIR}/${CASE}/temp/skeleton_2.nii ${TARGET_DIR}/${CASE}/temp/skeleton_2_.mnc -double
+minccalc -clobber -expression 'if(A[0]>11.5){out=1}else{out=0}' ${TARGET_DIR}/${CASE}/temp/skeleton_2_.mnc ${TARGET_DIR}/${CASE}/temp/skeleton_2_corr.mnc
 
 # Third Test: GM with 1 voxel dilation to the outside.
 #### Subtract interior initial segmentations from the dilated cerebral exterior.
@@ -128,4 +134,7 @@ ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/temp/gm_dilated_as_csf_and_gm
 gzip -k ${TARGET_DIR}/${CASE}/temp/gm_dilated_as_csf_and_gm1.nii --verbose
 #### Skeleton
 ${RESOURCES_DIR}/bin/brainvisa-4.5.0/bin/VipSkeleton -i ${TARGET_DIR}/${CASE}/temp/gm_dilated_as_csf_and_gm1.nii -so ${TARGET_DIR}/${CASE}/temp/skeleton_3.nii -g ${TARGET_DIR}/${CASE}/temp/initial_segmentations_sides_joined.nii -p c -wp 0 -lz 0 -lu 10 -e 0.5 -mct 0 -gct -10
+# Binarize Skeleton
+${RESOURCES_DIR}/bin/nii2mnc -clobber ${TARGET_DIR}/${CASE}/temp/skeleton_3.nii ${TARGET_DIR}/${CASE}/temp/skeleton_3_.mnc -double
+minccalc -clobber -expression 'if(A[0]>11.5){out=1}else{out=0}' ${TARGET_DIR}/${CASE}/temp/skeleton_3_.mnc ${TARGET_DIR}/${CASE}/temp/skeleton_3_corr.mnc
 #########################################################################

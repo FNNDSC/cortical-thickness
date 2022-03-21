@@ -1,3 +1,3 @@
 #!/bin/bash
 CASE=${1}
-freeview Results/${CASE}/temp/* Results/${CASE}/input/*
+freeview Results/${CASE}/temp/*.nii Results/${CASE}/temp/*.mnc Results/${CASE}/input/*
