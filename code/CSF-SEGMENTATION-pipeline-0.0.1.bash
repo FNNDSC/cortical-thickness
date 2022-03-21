@@ -95,11 +95,9 @@ ${RESOURCES_DIR}/bin/mincdefrag ${TARGET_DIR}/${CASE}/temp/CSFfirstguess_tmp2.mn
 mincmath -or ${TARGET_DIR}/${CASE}/temp/CSFfirstguess_tmp3.mnc ${TARGET_DIR}/${CASE}/temp/csf_skeleton_from_cerebral_ext.mnc ${TARGET_DIR}/${CASE}/temp/CSFfirstguess_1.mnc -clobber
 # Fill holes inside CSF
 mincmorph -filetype -3D26 -successive CC ${TARGET_DIR}/${CASE}/temp/CSFfirstguess_1.mnc -clobber ${TARGET_DIR}/${CASE}/temp/CSFfirstguess.mnc
-# Dilation and Erosion Process to join separate clusters.  # Not ideal.Form Alterations
-# mincmorph -filetype -3D26 -successive DDDDEEEE ${TARGET_DIR}/${CASE}/temp/CSFfirstguess_2.mnc -clobber ${TARGET_DIR}/${CASE}/temp/CSFfirstguess_f.mnc
 
 #####################(GM + CSF -> Skeleton)########################################
-# First Test: Merge CSF estimated with intensities with GM.
+# First Test Skeletonization: Merge CSF estimated with intensities with GM.
 mincmath -or ${TARGET_DIR}/${CASE}/temp/CSFfirstguess.mnc ${TARGET_DIR}/${CASE}/temp/cerebral_ext.mnc ${TARGET_DIR}/${CASE}/temp/csf_and_gm_with_intensity.mnc -clobber
 #### Prepare file, Gray Scale and nii zipped.
 minccalc -expression 'if(A[0]==0){out=0}else{out=255}' ${TARGET_DIR}/${CASE}/temp/csf_and_gm_with_intensity.mnc ${TARGET_DIR}/${CASE}/temp/csf_and_gm_with_intensity_grayscale.mnc -clobber
@@ -111,7 +109,7 @@ ${RESOURCES_DIR}/bin/brainvisa-4.5.0/bin/VipSkeleton -i ${TARGET_DIR}/${CASE}/te
 ${RESOURCES_DIR}/bin/nii2mnc -clobber ${TARGET_DIR}/${CASE}/temp/skeleton_1.nii ${TARGET_DIR}/${CASE}/temp/skeleton_1_.mnc -double
 minccalc -clobber -expression 'if(A[0]>11.5){out=1}else{out=0}' ${TARGET_DIR}/${CASE}/temp/skeleton_1_.mnc ${TARGET_DIR}/${CASE}/temp/skeleton_1_corr.mnc
 
-# Second Test: Obtain an estimation of CSF merged with GM removing whitematter from brain extraction.
+# Second Test  Skeletonization: Obtain an estimation of CSF merged with GM removing whitematter from brain extraction.
 minccalc -expression 'if(A[0]>0&&A[1]==1){out=0}else if(A[0]==0){out=0}else{out=1}' ${TARGET_DIR}/${CASE}/input/${INPUT_NAME_POSPROCESS}.mnc ${TARGET_DIR}/${CASE}/temp/cerebral_int.mnc ${TARGET_DIR}/${CASE}/temp/csf_and_gm_with_wm.mnc -clobber
 #### Prepare file, Gray Scale and nii zipped.
 minccalc -expression 'if(A[0]==0){out=0}else{out=255}' ${TARGET_DIR}/${CASE}/temp/csf_and_gm_with_wm.mnc ${TARGET_DIR}/${CASE}/temp/csf_and_gm_with_wm_grayscale.mnc -clobber
@@ -123,7 +121,7 @@ ${RESOURCES_DIR}/bin/brainvisa-4.5.0/bin/VipSkeleton -i ${TARGET_DIR}/${CASE}/te
 ${RESOURCES_DIR}/bin/nii2mnc -clobber ${TARGET_DIR}/${CASE}/temp/skeleton_2.nii ${TARGET_DIR}/${CASE}/temp/skeleton_2_.mnc -double
 minccalc -clobber -expression 'if(A[0]>11.5){out=1}else{out=0}' ${TARGET_DIR}/${CASE}/temp/skeleton_2_.mnc ${TARGET_DIR}/${CASE}/temp/skeleton_2_corr.mnc
 
-# Third Test: GM with 1 voxel dilation to the outside.
+# Third Test  Skeletonization: GM with 1 voxel dilation to the outside.
 #### Subtract interior initial segmentations from the dilated cerebral exterior.
 mincmath -sub ${TARGET_DIR}/${CASE}/temp/cerebral_ext_d.mnc ${TARGET_DIR}/${CASE}/temp/cerebral_int.mnc ${TARGET_DIR}/${CASE}/temp/sub_gm_dilated.mnc -clobber
 #### Remove all negative areas (inner part).
@@ -138,3 +136,21 @@ ${RESOURCES_DIR}/bin/brainvisa-4.5.0/bin/VipSkeleton -i ${TARGET_DIR}/${CASE}/te
 ${RESOURCES_DIR}/bin/nii2mnc -clobber ${TARGET_DIR}/${CASE}/temp/skeleton_3.nii ${TARGET_DIR}/${CASE}/temp/skeleton_3_.mnc -double
 minccalc -clobber -expression 'if(A[0]>11.5){out=1}else{out=0}' ${TARGET_DIR}/${CASE}/temp/skeleton_3_.mnc ${TARGET_DIR}/${CASE}/temp/skeleton_3_corr.mnc
 #########################################################################
+
+# Test: Pial Surface Extraction, WM expansion.
+#### Prepare files
+${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/temp/CSFfirstguess.mnc ${TARGET_DIR}/${CASE}/temp/ps_csf.nii -short
+${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/temp/cerebral_int.mnc ${TARGET_DIR}/${CASE}/temp/ps_wm.nii -short
+#### Python venv - activate
+source ${RESOURCES_DIR}/bin/pyenv/bin/activate
+#### Call Script
+python3 ${RESOURCES_DIR}/code/python/pial_surface.py \
+    -inPath ${TARGET_DIR}/${CASE}/temp \
+    -inCSF ps_csf.nii \
+    -inWM ps_wm.nii \
+    -outPath ${TARGET_DIR}/${CASE}/output \
+    -outPS ps.nii \
+    -iterations 10 \
+    -verbose 0
+#### Python venv - deactivate
+deactivate
