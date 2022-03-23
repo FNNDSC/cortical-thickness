@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Pial Surface extraction expanding White Matter till CSF.
-Made by Jose Cisneros, March 21 2021
+Made by Jose Cisneros, March 21 2022
 """
 import os
 import argparse
@@ -16,6 +16,7 @@ class PialSurface():
         self.args = None
         self.argumentParser()
         self.nii = None
+        self.mriData = None
         self.wmData = None
         self.csfData = None
         self.loadData()
