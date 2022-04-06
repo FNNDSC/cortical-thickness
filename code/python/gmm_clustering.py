@@ -24,7 +24,6 @@ class GmmClustering():
         self.mriData = None
         self.wmData = None
         self.gmData = None
-        self.csfData = None
         self.loadData()
         
         self.outputData = None
@@ -32,7 +31,7 @@ class GmmClustering():
     
     def run(self):
         self.wmData = ndimage.binary_dilation(self.wmData, iterations=1) # 3D06 Kernel
-        mriDataFiltered = self.mriData * np.logical_not(self.wmData) # GM & CSF
+        mriDataFiltered = self.mriData * np.logical_not(self.wmData) # GM & CSF = Brain - WM.
         
         # Split Input Data, Value, Index
         intensities = []
@@ -58,7 +57,9 @@ class GmmClustering():
         self.outputMaskL1 = np.zeros(self.mriData.shape, dtype=self.mriData.dtype)
         self.outputDataL2 = np.zeros(self.mriData.shape, dtype=self.mriData.dtype)
         self.outputMaskL2 = np.zeros(self.mriData.shape, dtype=self.mriData.dtype)
+        self.outputTest = np.zeros(self.mriData.shape, dtype=self.mriData.dtype)
         for i in range(len(intensities)):
+            self.outputTest[indexes[i]] = intensities[i]
             if prob[i][0] > self.args.THRESHOLD:
                 self.outputDataL1[indexes[i]] = intensities[i]
                 self.outputMaskL1[indexes[i]] = 1
@@ -91,18 +92,15 @@ class GmmClustering():
         self.showInfo("Nii File Saved. " + name)
 
     def loadData(self):
-        self.nii = load(self.args.IN_PATH + "/" + self.args.IN_MRI)
-        self.mriData = np.asarray(self.nii.dataobj)
-        self.showInfo("MRI Data Loaded: " + str(self.mriData.shape))
         self.nii = load(self.args.IN_PATH + "/" + self.args.IN_WM)
         self.wmData = np.asarray(self.nii.dataobj)
         self.showInfo("WM Data Loaded: " + str(self.wmData.shape))
         self.nii = load(self.args.IN_PATH + "/" + self.args.IN_GM)
         self.gmData = np.asarray(self.nii.dataobj)
         self.showInfo("GM Data Loaded: " + str(self.gmData.shape))
-        self.nii = load(self.args.IN_PATH + "/" + self.args.IN_CSF)
-        self.csfData = np.asarray(self.nii.dataobj)
-        self.showInfo("CSF Data Loaded: " + str(self.csfData.shape))
+        self.nii = load(self.args.IN_PATH + "/" + self.args.IN_MRI)
+        self.mriData = np.asarray(self.nii.dataobj)
+        self.showInfo("MRI Data Loaded: " + str(self.mriData.shape))
 
     def argumentParser(self):
         parser = argparse.ArgumentParser("   ==========   Gaussian Mixture Model, Soft Clustering CSF/GM by Jose Cisneros (March 22), 2022 ver.1)   ==========   ")
@@ -110,7 +108,6 @@ class GmmClustering():
         parser.add_argument("-inMRI", "--IN_MRI",action="store",dest="IN_MRI",type=str, default="mri.nii", help="input .nii file containing MRI with intensities")
         parser.add_argument("-inWM", "--IN_WM",action="store",dest="IN_WM",type=str, default="gmm_wm.nii", help="input binarize .nii file containing White Matter")
         parser.add_argument("-inGM", "--IN_GM",action="store",dest="IN_GM",type=str, default="gmm_gm.nii", help="input binarize .nii file containing Gray Matter")
-        parser.add_argument("-inCSF", "--IN_CSF",action="store",dest="IN_CSF",type=str, default="gmm_csf_in.nii", help="input binarize .nii file containing CSF")
         parser.add_argument("-outPath", "--OUT_PATH",action="store",dest="OUT_PATH",type=str, default="/neuro/labs/grantlab/research/MRI_processing/jose.cisneros/CSFSegmentation/Results/FCB028/temp", help="output folder")
         parser.add_argument("-outCSF", "--OUT_CSF",action="store",dest="OUT_CSF",type=str, default="gmm_csf.nii", help="output binarize .nii file containing improved CSF")
         parser.add_argument("-verbose", "--VERBOSE",action="store",dest="VERBOSE",type=bool, default=True, help="Show logs")
