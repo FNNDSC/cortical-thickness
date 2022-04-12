@@ -57,36 +57,29 @@ mincmath -or ${TARGET_DIR}/${CASE}/temp/cerebral_left_int.mnc ${TARGET_DIR}/${CA
 # Binarize all segmentations [from 1 to 161]
 mincmath -segment -const2 1 161 ${TARGET_DIR}/${CASE}/input/${INPUT_SEG_NAME}.mnc ${TARGET_DIR}/${CASE}/temp/initial_segmentations.mnc -clobber
 
-# Join Side Segmentations
-minccalc -expression 'if(A[0]==1 || A[0]==42){out=1}else if(A[0]==160||A[0]==161){out=2}' ${TARGET_DIR}/${CASE}/input/${INPUT_SEG_NAME}.mnc ${TARGET_DIR}/${CASE}/temp/initial_segmentations_sides_joined.mnc -clobber
-${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/temp/initial_segmentations_sides_joined.mnc ${TARGET_DIR}/${CASE}/temp/initial_segmentations_sides_joined.nii
-
 # Remove Cerebellum
 mincmorph -filetype -successive DDDDDDD ${TARGET_DIR}/${CASE}/temp/initial_segmentations.mnc -clobber ${TARGET_DIR}/${CASE}/temp/initial_segmentations_7_dilated.mnc
 minccalc -expression 'if(A[0]==1){out=A[1]}else{out=0}' ${TARGET_DIR}/${CASE}/temp/initial_segmentations_7_dilated.mnc ${TARGET_DIR}/${CASE}/input/${INPUT_NAME}.mnc ${TARGET_DIR}/${CASE}/input/${INPUT_NAME_POSPROCESS}.mnc -clobber
 
 #############################################################
 # GM External Boundary - 2 voxels apart.
-# Dilation Cerebral Exterior
+#   Dilation Cerebral Exterior
 mincmorph -filetype -successive DD ${TARGET_DIR}/${CASE}/temp/cerebral_ext.mnc -clobber ${TARGET_DIR}/${CASE}/temp/cerebral_ext_d.mnc
-# Subtract initial segmentations  from the dilated cerebral exterior.
+#   Subtract initial segmentations  from the dilated cerebral exterior.
 mincmath -not ${TARGET_DIR}/${CASE}/temp/initial_segmentations.mnc ${TARGET_DIR}/${CASE}/temp/initial_segmentations_not.mnc -clobber
 mincmath -and ${TARGET_DIR}/${CASE}/temp/initial_segmentations_not.mnc ${TARGET_DIR}/${CASE}/temp/cerebral_ext_d.mnc ${TARGET_DIR}/${CASE}/temp/csf_from_gm.mnc -clobber
 
 # GM External Boundary - 3th voxel apart.
-# Dilation Cerebral Exterior
+#   Dilation Cerebral Exterior
 mincmorph -filetype -successive DDD ${TARGET_DIR}/${CASE}/temp/cerebral_ext.mnc -clobber ${TARGET_DIR}/${CASE}/temp/cerebral_ext_d.mnc
-# Dilatation Initial Segmentation.
+#   Dilatation Initial Segmentation.
 mincmorph -filetype -successive DD ${TARGET_DIR}/${CASE}/temp/initial_segmentations.mnc -clobber ${TARGET_DIR}/${CASE}/temp/initial_segmentations_dilated.mnc
-# Subtract initial segmentations dilated from the dilated cerebral exterior.
+#   Subtract initial segmentations dilated from the dilated cerebral exterior.
 mincmath -not ${TARGET_DIR}/${CASE}/temp/initial_segmentations_dilated.mnc ${TARGET_DIR}/${CASE}/temp/initial_segmentations_dilated_not.mnc -clobber
 mincmath -and ${TARGET_DIR}/${CASE}/temp/initial_segmentations_dilated_not.mnc ${TARGET_DIR}/${CASE}/temp/cerebral_ext_d.mnc ${TARGET_DIR}/${CASE}/temp/csf_from_gm_ext.mnc -clobber
 
 ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/temp/csf_from_gm_ext.mnc ${TARGET_DIR}/${CASE}/temp/csf_from_gm_ext.nii
 ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/temp/csf_from_gm.mnc ${TARGET_DIR}/${CASE}/temp/csf_from_gm.nii
-
-#############################################################
-# CSF segmentation - Intensity clustering using GMM.
 
 # Extract Skull
 #### Prepare files
@@ -104,6 +97,9 @@ python3 ${RESOURCES_DIR}/code/python/skull.py \
     -verbose 1
 
 ${RESOURCES_DIR}/bin/nii2mnc ${TARGET_DIR}/${CASE}/temp/skull.nii ${TARGET_DIR}/${CASE}/temp/skull_a.mnc
+
+#############################################################
+# CSF segmentation - Intensity clustering using GMM.
 
 # GMM - Gaussian Mixture Model, Soft Clustering CSF/GM
 #### Prepare files
@@ -126,16 +122,17 @@ python3 ${RESOURCES_DIR}/code/python/gmm_clustering.py \
 ${RESOURCES_DIR}/bin/nii2mnc ${TARGET_DIR}/${CASE}/temp/gmm_csf.nii ${TARGET_DIR}/${CASE}/temp/gmm_csf.mnc
 
 #############################################################
-# Graymatter including Skull, GM = Brain - WM - CSF_gmm.
+# Get GM including CSF/GM outer boundary,
 mincmath -or ${TARGET_DIR}/${CASE}/temp/csf_from_gm_ext.mnc ${TARGET_DIR}/${CASE}/temp/cerebral_ext.mnc  -clobber ${TARGET_DIR}/${CASE}/temp/gray.mnc
-#minccalc -expr 'if(A[0]>0 && A[1]==0 && A[2]==0){ out=1 }else{ out=0 }' ${TARGET_DIR}/${CASE}/input/${INPUT_NAME_POSPROCESS}.mnc ${TARGET_DIR}/${CASE}/temp/cerebral_int.mnc ${TARGET_DIR}/${CASE}/temp/gmm_csf_a.mnc -clobber ${TARGET_DIR}/${CASE}/temp/gray.mnc
+# GM = Brain - WM - CSF_gmm.
+# minccalc -expr 'if(A[0]>0 && A[1]==0 && A[2]==0){ out=1 }else{ out=0 }' ${TARGET_DIR}/${CASE}/input/${INPUT_NAME_POSPROCESS}.mnc ${TARGET_DIR}/${CASE}/temp/cerebral_int.mnc ${TARGET_DIR}/${CASE}/temp/gmm_csf_a.mnc -clobber ${TARGET_DIR}/${CASE}/temp/gray.mnc
 
 # Join GM and WM
 minccalc -expression 'if(A[0]>0){out=3}else if(A[1]>0){out=2} else {out=0}' ${TARGET_DIR}/${CASE}/temp/cerebral_int.mnc ${TARGET_DIR}/${CASE}/temp/gray.mnc -clobber ${TARGET_DIR}/${CASE}/temp/wm_and_gm.mnc
 ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/temp/wm_and_gm.mnc ${TARGET_DIR}/${CASE}/temp/wm_and_gm.nii -short
 
 #####################(GM + CSF -> Skeleton)########################################
-#### Prepare file, Gray Scale and nii zipped.
+#### Join CSF & GM in Gray Scale. Prepare file.
 minccalc -expression 'if(A[2] == 1){out=0}else if(A[0]==1 || A[1]==1){out=255}else{out=11}' ${TARGET_DIR}/${CASE}/temp/csf_from_gm.mnc ${TARGET_DIR}/${CASE}/temp/gray.mnc ${TARGET_DIR}/${CASE}/temp/cerebral_int.mnc -clobber ${TARGET_DIR}/${CASE}/temp/csf_and_gm_with_wm_grayscale.mnc
 ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/temp/csf_and_gm_with_wm_grayscale.mnc ${TARGET_DIR}/${CASE}/temp/csf_and_gm_with_wm1.nii -short
 gzip -k ${TARGET_DIR}/${CASE}/temp/csf_and_gm_with_wm1.nii --verbose
