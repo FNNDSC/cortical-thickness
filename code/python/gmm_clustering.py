@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Gaussian Mixture Model, Soft Clustering CSF/GM.
+Gaussian Mixture Model, Soft Clustering CSF/GM considering intensity.
 Made by Jose Cisneros, March 22 2022
 """
 import os

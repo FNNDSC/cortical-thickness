@@ -1,5 +1,5 @@
 #!/bin/bash
-BASE_PATH=/home/jose/Desktop/Projects/HarvardIntern # /neuro/labs/grantlab/research/MRI_processing
+BASE_PATH=/neuro/labs/grantlab/research/MRI_processing
 CASE=FCB028
 TARGET_DIR=${BASE_PATH}/jose.cisneros/CSFSegmentation/Results/${CASE}/temp
 RESOURCES_DIR=${BASE_PATH}/jose.cisneros/CSFSegmentation

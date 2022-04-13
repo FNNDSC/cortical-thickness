@@ -28,9 +28,10 @@ class PialSurface():
         for i in range(self.args.ITERATIONS):
             self.showInfo("Running Iteration " + str(i))
             self.iteration()
-            if self.args.PLOT:
-                self.plot3D("output_" + str(i))
         self.saveNII(self.args.OUT_PATH + "/" + self.args.OUT_PS, self.outputData)
+        if self.args.PLOT:
+            self.plot3D("output_original", include_csf=False, include_ps=False)
+            self.plot3D("output", include_csf=True, include_ps=True)
 
     def saveNII(self, name, data):
         out = Nifti1Image(data, header=self.nii.header, affine=self.nii.affine)
@@ -67,15 +68,17 @@ class PialSurface():
         parser.add_argument("-plot", "--PLOT",action="store",dest="PLOT",type=bool, default=False, help="Plot 3D")
         self.args = parser.parse_args()
     
-    def plot3D(self, name="output"):
+    def plot3D(self, name="output", include_csf=True, include_ps=True):
         img = self.mriData
-        labelWM = self.wmData.astype(int)
         labelCSF = self.csfData.astype(int)
         labelCSF[labelCSF == 1] = 2
         labelPS = self.outputData.astype(int)
         labelPS[labelPS == 1] = 3
+        
+        alphaCSF = 0.15 if include_csf else 0
+        alphaPS = 0.5 if include_ps else 0
 
-        f,axarr = plt.subplots(3,3,figsize=(9,9))
+        f,axarr = plt.subplots(3,3,figsize=(9,9))   
         f.patch.set_facecolor("k")
         cmap = colors.ListedColormap(['none','cyan', 'green', 'red'])
         bounds=[0, 0.5, 1.5, 2.5, 3.5]
@@ -84,57 +87,48 @@ class PialSurface():
         f.text(0.4, 0.95, name, size="large", color="White")
 
         axarr[0,0].imshow(np.rot90(img[:,:,int(img.shape[-1]*0.4)]),cmap="gray")
-        axarr[0,0].imshow(np.rot90(labelWM[:,:,int(labelWM.shape[-1]*0.4)]),alpha=0.15, interpolation='nearest', cmap=cmap, norm = norm)
-        axarr[0,0].imshow(np.rot90(labelCSF[:,:,int(labelCSF.shape[-1]*0.4)]),alpha=0.15, interpolation='nearest', cmap=cmap, norm = norm)
-        axarr[0,0].imshow(np.rot90(labelPS[:,:,int(labelPS.shape[-1]*0.4)]),alpha=0.5, interpolation='nearest', cmap=cmap, norm = norm)
+        axarr[0,0].imshow(np.rot90(labelCSF[:,:,int(labelCSF.shape[-1]*0.4)]),alpha=alphaCSF, interpolation='nearest', cmap=cmap, norm = norm)
+        axarr[0,0].imshow(np.rot90(labelPS[:,:,int(labelPS.shape[-1]*0.4)]),alpha=alphaPS, interpolation='nearest', cmap=cmap, norm = norm)
         axarr[0,0].axis("off")
 
         axarr[0,1].imshow(np.rot90(img[:,:,int(img.shape[-1]*0.5)]),cmap="gray")
-        axarr[0,1].imshow(np.rot90(labelWM[:,:,int(labelWM.shape[-1]*0.5)]),alpha=0.15, interpolation='nearest', cmap=cmap, norm = norm)
-        axarr[0,1].imshow(np.rot90(labelCSF[:,:,int(labelCSF.shape[-1]*0.5)]),alpha=0.15, interpolation='nearest', cmap=cmap, norm = norm)
-        axarr[0,1].imshow(np.rot90(labelPS[:,:,int(labelPS.shape[-1]*0.5)]),alpha=0.5, interpolation='nearest', cmap=cmap, norm = norm)
+        axarr[0,1].imshow(np.rot90(labelCSF[:,:,int(labelCSF.shape[-1]*0.5)]),alpha=alphaCSF, interpolation='nearest', cmap=cmap, norm = norm)
+        axarr[0,1].imshow(np.rot90(labelPS[:,:,int(labelPS.shape[-1]*0.5)]),alpha=alphaPS, interpolation='nearest', cmap=cmap, norm = norm)
         axarr[0,1].axis("off")
 
         axarr[0,2].imshow(np.rot90(img[:,:,int(img.shape[-1]*0.6)]),cmap="gray")
-        axarr[0,2].imshow(np.rot90(labelWM[:,:,int(labelWM.shape[-1]*0.6)]),alpha=0.15, interpolation='nearest', cmap=cmap, norm = norm)
-        axarr[0,2].imshow(np.rot90(labelCSF[:,:,int(labelCSF.shape[-1]*0.6)]),alpha=0.15, interpolation='nearest', cmap=cmap, norm = norm)
-        axarr[0,2].imshow(np.rot90(labelPS[:,:,int(labelPS.shape[-1]*0.6)]),alpha=0.5, interpolation='nearest', cmap=cmap, norm = norm)
+        axarr[0,2].imshow(np.rot90(labelCSF[:,:,int(labelCSF.shape[-1]*0.6)]),alpha=alphaCSF, interpolation='nearest', cmap=cmap, norm = norm)
+        axarr[0,2].imshow(np.rot90(labelPS[:,:,int(labelPS.shape[-1]*0.6)]),alpha=alphaPS, interpolation='nearest', cmap=cmap, norm = norm)
         axarr[0,2].axis("off")
 
         axarr[1,0].imshow(np.rot90(img[:,int(img.shape[-2]*0.4),:]),cmap="gray")
-        axarr[1,0].imshow(np.rot90(labelWM[:,int(labelWM.shape[-2]*0.4),:]),alpha=0.15, interpolation='nearest', cmap=cmap, norm = norm)
-        axarr[1,0].imshow(np.rot90(labelCSF[:,int(labelCSF.shape[-2]*0.4),:]),alpha=0.15, interpolation='nearest', cmap=cmap, norm = norm)
-        axarr[1,0].imshow(np.rot90(labelPS[:,int(labelPS.shape[-2]*0.4),:]),alpha=0.5, interpolation='nearest', cmap=cmap, norm = norm)
+        axarr[1,0].imshow(np.rot90(labelCSF[:,int(labelCSF.shape[-2]*0.4),:]),alpha=alphaCSF, interpolation='nearest', cmap=cmap, norm = norm)
+        axarr[1,0].imshow(np.rot90(labelPS[:,int(labelPS.shape[-2]*0.4),:]),alpha=alphaPS, interpolation='nearest', cmap=cmap, norm = norm)
         axarr[1,0].axis("off")
 
         axarr[1,1].imshow(np.rot90(img[:,int(img.shape[-2]*0.5),:]),cmap="gray")
-        axarr[1,1].imshow(np.rot90(labelWM[:,int(labelWM.shape[-2]*0.5),:]),alpha=0.15, interpolation='nearest', cmap=cmap, norm = norm)
-        axarr[1,1].imshow(np.rot90(labelCSF[:,int(labelCSF.shape[-2]*0.5),:]),alpha=0.15, interpolation='nearest', cmap=cmap, norm = norm)
-        axarr[1,1].imshow(np.rot90(labelPS[:,int(labelPS.shape[-2]*0.5),:]),alpha=0.5, interpolation='nearest', cmap=cmap, norm = norm)
+        axarr[1,1].imshow(np.rot90(labelCSF[:,int(labelCSF.shape[-2]*0.5),:]),alpha=alphaCSF, interpolation='nearest', cmap=cmap, norm = norm)
+        axarr[1,1].imshow(np.rot90(labelPS[:,int(labelPS.shape[-2]*0.5),:]),alpha=alphaPS, interpolation='nearest', cmap=cmap, norm = norm)
         axarr[1,1].axis("off")
 
         axarr[1,2].imshow(np.rot90(img[:,int(img.shape[-2]*0.6),:]),cmap="gray")
-        axarr[1,2].imshow(np.rot90(labelWM[:,int(labelWM.shape[-2]*0.6),:]),alpha=0.15, interpolation='nearest', cmap=cmap, norm = norm)
-        axarr[1,2].imshow(np.rot90(labelCSF[:,int(labelCSF.shape[-2]*0.6),:]),alpha=0.15, interpolation='nearest', cmap=cmap, norm = norm)
-        axarr[1,2].imshow(np.rot90(labelPS[:,int(labelPS.shape[-2]*0.6),:]),alpha=0.5, interpolation='nearest', cmap=cmap, norm = norm)
+        axarr[1,2].imshow(np.rot90(labelCSF[:,int(labelCSF.shape[-2]*0.6),:]),alpha=alphaCSF, interpolation='nearest', cmap=cmap, norm = norm)
+        axarr[1,2].imshow(np.rot90(labelPS[:,int(labelPS.shape[-2]*0.6),:]),alpha=alphaPS, interpolation='nearest', cmap=cmap, norm = norm)
         axarr[1,2].axis("off")
 
         axarr[2,0].imshow(np.rot90(img[int(img.shape[0]*0.4),:,:]),cmap="gray")
-        axarr[2,0].imshow(np.rot90(labelWM[int(labelWM.shape[0]*0.4),:,:]),alpha=0.15, interpolation='nearest', cmap=cmap, norm = norm)
-        axarr[2,0].imshow(np.rot90(labelCSF[int(labelCSF.shape[0]*0.4),:,:]),alpha=0.15, interpolation='nearest', cmap=cmap, norm = norm)
-        axarr[2,0].imshow(np.rot90(labelPS[int(labelPS.shape[0]*0.4),:,:]),alpha=0.5, interpolation='nearest', cmap=cmap, norm = norm)
+        axarr[2,0].imshow(np.rot90(labelCSF[int(labelCSF.shape[0]*0.4),:,:]),alpha=alphaCSF, interpolation='nearest', cmap=cmap, norm = norm)
+        axarr[2,0].imshow(np.rot90(labelPS[int(labelPS.shape[0]*0.4),:,:]),alpha=alphaPS, interpolation='nearest', cmap=cmap, norm = norm)
         axarr[2,0].axis("off")
 
         axarr[2,1].imshow(np.rot90(img[int(img.shape[0]*0.5),:,:]),cmap="gray")
-        axarr[2,1].imshow(np.rot90(labelWM[int(labelWM.shape[0]*0.5),:,:]),alpha=0.15, interpolation='nearest', cmap=cmap, norm = norm)
-        axarr[2,1].imshow(np.rot90(labelCSF[int(labelCSF.shape[0]*0.5),:,:]),alpha=0.15, interpolation='nearest', cmap=cmap, norm = norm)
-        axarr[2,1].imshow(np.rot90(labelPS[int(labelPS.shape[0]*0.5),:,:]),alpha=0.5, interpolation='nearest', cmap=cmap, norm = norm)
+        axarr[2,1].imshow(np.rot90(labelCSF[int(labelCSF.shape[0]*0.5),:,:]),alpha=alphaCSF, interpolation='nearest', cmap=cmap, norm = norm)
+        axarr[2,1].imshow(np.rot90(labelPS[int(labelPS.shape[0]*0.5),:,:]),alpha=alphaPS, interpolation='nearest', cmap=cmap, norm = norm)
         axarr[2,1].axis("off")
 
         axarr[2,2].imshow(np.rot90(img[int(img.shape[0]*0.6),:,:]),cmap="gray")
-        axarr[2,2].imshow(np.rot90(labelWM[int(labelWM.shape[0]*0.6),:,:]),alpha=0.15, interpolation='nearest', cmap=cmap, norm = norm)
-        axarr[2,2].imshow(np.rot90(labelCSF[int(labelCSF.shape[0]*0.6),:,:]),alpha=0.15, interpolation='nearest', cmap=cmap, norm = norm)
-        axarr[2,2].imshow(np.rot90(labelPS[int(labelPS.shape[0]*0.6),:,:]),alpha=0.5, interpolation='nearest', cmap=cmap, norm = norm)
+        axarr[2,2].imshow(np.rot90(labelCSF[int(labelCSF.shape[0]*0.6),:,:]),alpha=alphaCSF, interpolation='nearest', cmap=cmap, norm = norm)
+        axarr[2,2].imshow(np.rot90(labelPS[int(labelPS.shape[0]*0.6),:,:]),alpha=alphaPS, interpolation='nearest', cmap=cmap, norm = norm)
         axarr[2,2].axis("off")
 
         f.subplots_adjust(wspace=0, hspace=0)

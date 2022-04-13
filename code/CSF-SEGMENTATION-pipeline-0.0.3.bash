@@ -1,7 +1,7 @@
 #!/bin/bash
 
-BASE_PATH=/home/jose/Desktop/Projects/HarvardIntern # /neuro/labs/grantlab/research/MRI_processing
-CASE=FCB028 # ${1}
+BASE_PATH=/neuro/labs/grantlab/research/MRI_processing
+CASE=${1} #FCB028
 BASE_DIR=${BASE_PATH}/jose.cisneros/CSFSegmentation/Samples # ${2}
 TARGET_DIR=${BASE_PATH}/jose.cisneros/CSFSegmentation/Results # ${3}
 RESOURCES_DIR=${BASE_PATH}/jose.cisneros/CSFSegmentation # ${3}
@@ -62,41 +62,24 @@ mincmorph -filetype -successive DDDDDDD ${TARGET_DIR}/${CASE}/temp/initial_segme
 minccalc -expression 'if(A[0]==1){out=A[1]}else{out=0}' ${TARGET_DIR}/${CASE}/temp/initial_segmentations_7_dilated.mnc ${TARGET_DIR}/${CASE}/input/${INPUT_NAME}.mnc ${TARGET_DIR}/${CASE}/input/${INPUT_NAME_POSPROCESS}.mnc -clobber
 
 #############################################################
-# GM External Boundary - 2 voxels apart.
+# GM External Boundary - 1 voxel apart.
 #   Dilation Cerebral Exterior
-mincmorph -filetype -successive DD ${TARGET_DIR}/${CASE}/temp/cerebral_ext.mnc -clobber ${TARGET_DIR}/${CASE}/temp/cerebral_ext_d.mnc
+mincmorph -filetype -successive D ${TARGET_DIR}/${CASE}/temp/cerebral_ext.mnc -clobber ${TARGET_DIR}/${CASE}/temp/cerebral_ext_d.mnc
 #   Subtract initial segmentations  from the dilated cerebral exterior.
 mincmath -not ${TARGET_DIR}/${CASE}/temp/initial_segmentations.mnc ${TARGET_DIR}/${CASE}/temp/initial_segmentations_not.mnc -clobber
 mincmath -and ${TARGET_DIR}/${CASE}/temp/initial_segmentations_not.mnc ${TARGET_DIR}/${CASE}/temp/cerebral_ext_d.mnc ${TARGET_DIR}/${CASE}/temp/csf_from_gm.mnc -clobber
 
-# GM External Boundary - 3th voxel apart.
+# GM External Boundary - 2th voxel apart.
 #   Dilation Cerebral Exterior
-mincmorph -filetype -successive DDD ${TARGET_DIR}/${CASE}/temp/cerebral_ext.mnc -clobber ${TARGET_DIR}/${CASE}/temp/cerebral_ext_d.mnc
+mincmorph -filetype -successive DD ${TARGET_DIR}/${CASE}/temp/cerebral_ext.mnc -clobber ${TARGET_DIR}/${CASE}/temp/cerebral_ext_d.mnc
 #   Dilatation Initial Segmentation.
-mincmorph -filetype -successive DD ${TARGET_DIR}/${CASE}/temp/initial_segmentations.mnc -clobber ${TARGET_DIR}/${CASE}/temp/initial_segmentations_dilated.mnc
+mincmorph -filetype -successive D ${TARGET_DIR}/${CASE}/temp/initial_segmentations.mnc -clobber ${TARGET_DIR}/${CASE}/temp/initial_segmentations_dilated.mnc
 #   Subtract initial segmentations dilated from the dilated cerebral exterior.
 mincmath -not ${TARGET_DIR}/${CASE}/temp/initial_segmentations_dilated.mnc ${TARGET_DIR}/${CASE}/temp/initial_segmentations_dilated_not.mnc -clobber
 mincmath -and ${TARGET_DIR}/${CASE}/temp/initial_segmentations_dilated_not.mnc ${TARGET_DIR}/${CASE}/temp/cerebral_ext_d.mnc ${TARGET_DIR}/${CASE}/temp/csf_from_gm_ext.mnc -clobber
 
 ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/temp/csf_from_gm_ext.mnc ${TARGET_DIR}/${CASE}/temp/csf_from_gm_ext.nii
 ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/temp/csf_from_gm.mnc ${TARGET_DIR}/${CASE}/temp/csf_from_gm.nii
-
-# Extract Skull
-#### Prepare files
-${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/temp/cerebral_int.mnc ${TARGET_DIR}/${CASE}/temp/skull_wm.nii
-${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/input/${INPUT_NAME_POSPROCESS}.mnc ${TARGET_DIR}/${CASE}/temp/mri.nii
-
-#### Call Script
-python3 ${RESOURCES_DIR}/code/python/skull.py \
-    -inPath ${TARGET_DIR}/${CASE}/temp \
-    -inMRI mri.nii \
-    -inWM skull_wm.nii \
-    -outPath ${TARGET_DIR}/${CASE}/temp \
-    -outSkull skull.nii \
-    -iterations 15 \
-    -verbose 1
-
-${RESOURCES_DIR}/bin/nii2mnc ${TARGET_DIR}/${CASE}/temp/skull.nii ${TARGET_DIR}/${CASE}/temp/skull_a.mnc
 
 #############################################################
 # CSF segmentation - Intensity clustering using GMM.
@@ -109,6 +92,18 @@ ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/input/${INPUT_NAME_POSPROCESS
 
 #### Call Script
 python3 ${RESOURCES_DIR}/code/python/gmm_clustering.py \
+    -inPath ${TARGET_DIR}/${CASE}/temp \
+    -inMRI mri.nii \
+    -inWM gmm_wm.nii \
+    -inGM gmm_gm.nii \
+    -outPath ${TARGET_DIR}/${CASE}/temp \
+    -outCSF gmm_csf_old.nii \
+    -verbose 1 \
+    -plot 1 \
+    -threshold 0.67
+
+#### Call Script
+python3 ${RESOURCES_DIR}/code/python/gmm_clustering_pos.py \
     -inPath ${TARGET_DIR}/${CASE}/temp \
     -inMRI mri.nii \
     -inWM gmm_wm.nii \
