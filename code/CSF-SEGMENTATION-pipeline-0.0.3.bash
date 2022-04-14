@@ -107,8 +107,6 @@ ${RESOURCES_DIR}/bin/nii2mnc ${TARGET_DIR}/${CASE}/temp/gmm_csf.nii ${TARGET_DIR
 #############################################################
 # Get GM including CSF/GM outer boundary,
 mincmath -or ${TARGET_DIR}/${CASE}/temp/csf_from_gm_ext.mnc ${TARGET_DIR}/${CASE}/temp/cerebral_ext.mnc  -clobber ${TARGET_DIR}/${CASE}/temp/gray.mnc
-# GM = Brain - WM - CSF_gmm.
-# minccalc -expr 'if(A[0]>0 && A[1]==0 && A[2]==0){ out=1 }else{ out=0 }' ${TARGET_DIR}/${CASE}/input/${INPUT_NAME_POSPROCESS}.mnc ${TARGET_DIR}/${CASE}/temp/cerebral_int.mnc ${TARGET_DIR}/${CASE}/temp/gmm_csf_a.mnc -clobber ${TARGET_DIR}/${CASE}/temp/gray.mnc
 
 # Join GM and WM
 minccalc -expression 'if(A[0]>0){out=3}else if(A[1]>0){out=2} else {out=0}' ${TARGET_DIR}/${CASE}/temp/cerebral_int.mnc ${TARGET_DIR}/${CASE}/temp/gray.mnc -clobber ${TARGET_DIR}/${CASE}/temp/wm_and_gm.mnc
@@ -159,6 +157,3 @@ python3 ${RESOURCES_DIR}/code/python/pial_surface.py \
 
 #### Python venv - deactivate
 deactivate
-
-# freeview ${TARGET_DIR}/${CASE}/temp/csf_and_gm_with_wm1.nii.gz 
-# freeview ${TARGET_DIR}/${CASE}/temp/csf_and_gm_with_wm1.nii.gz ${TARGET_DIR}/${CASE}/temp/skeleton_corr.nii ${TARGET_DIR}/${CASE}/temp/roots.nii ${TARGET_DIR}/${CASE}/temp/wm_and_gm.nii ${TARGET_DIR}/${CASE}/temp/mri.nii
