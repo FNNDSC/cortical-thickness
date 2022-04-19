@@ -62,47 +62,28 @@ mincmorph -filetype -successive DDDDDDD ${TARGET_DIR}/${CASE}/temp/initial_segme
 minccalc -expression 'if(A[0]==1){out=A[1]}else{out=0}' ${TARGET_DIR}/${CASE}/temp/initial_segmentations_7_dilated.mnc ${TARGET_DIR}/${CASE}/input/${INPUT_NAME}.mnc ${TARGET_DIR}/${CASE}/input/${INPUT_NAME_POSPROCESS}.mnc -clobber
 
 #############################################################
-# GM External Boundary - 1 voxel apart.
+# GM External Boundary - 0 voxel apart.
 #   Dilation Cerebral Exterior
-mincmorph -filetype -successive D ${TARGET_DIR}/${CASE}/temp/cerebral_ext.mnc -clobber ${TARGET_DIR}/${CASE}/temp/cerebral_ext_d.mnc
+# mincmorph -filetype -successive D ${TARGET_DIR}/${CASE}/temp/cerebral_ext.mnc -clobber ${TARGET_DIR}/${CASE}/temp/cerebral_ext_d.mnc
+# No voxel Apart
+cp ${TARGET_DIR}/${CASE}/temp/cerebral_ext.mnc ${TARGET_DIR}/${CASE}/temp/cerebral_ext_d.mnc
 #   Subtract initial segmentations  from the dilated cerebral exterior.
 mincmath -not ${TARGET_DIR}/${CASE}/temp/initial_segmentations.mnc ${TARGET_DIR}/${CASE}/temp/initial_segmentations_not.mnc -clobber
 mincmath -and ${TARGET_DIR}/${CASE}/temp/initial_segmentations_not.mnc ${TARGET_DIR}/${CASE}/temp/cerebral_ext_d.mnc ${TARGET_DIR}/${CASE}/temp/csf_from_gm.mnc -clobber
 
-# GM External Boundary - 2th voxel apart.
+# GM External Boundary - 1th voxel apart.
 #   Dilation Cerebral Exterior
-mincmorph -filetype -successive DD ${TARGET_DIR}/${CASE}/temp/cerebral_ext.mnc -clobber ${TARGET_DIR}/${CASE}/temp/cerebral_ext_d.mnc
+mincmorph -filetype -successive D ${TARGET_DIR}/${CASE}/temp/cerebral_ext.mnc -clobber ${TARGET_DIR}/${CASE}/temp/cerebral_ext_d.mnc
 #   Dilatation Initial Segmentation.
-mincmorph -filetype -successive D ${TARGET_DIR}/${CASE}/temp/initial_segmentations.mnc -clobber ${TARGET_DIR}/${CASE}/temp/initial_segmentations_dilated.mnc
+# mincmorph -filetype -successive D ${TARGET_DIR}/${CASE}/temp/initial_segmentations.mnc -clobber ${TARGET_DIR}/${CASE}/temp/initial_segmentations_dilated.mnc
+# No Dilation
+cp ${TARGET_DIR}/${CASE}/temp/initial_segmentations.mnc ${TARGET_DIR}/${CASE}/temp/initial_segmentations_dilated.mnc
 #   Subtract initial segmentations dilated from the dilated cerebral exterior.
 mincmath -not ${TARGET_DIR}/${CASE}/temp/initial_segmentations_dilated.mnc ${TARGET_DIR}/${CASE}/temp/initial_segmentations_dilated_not.mnc -clobber
 mincmath -and ${TARGET_DIR}/${CASE}/temp/initial_segmentations_dilated_not.mnc ${TARGET_DIR}/${CASE}/temp/cerebral_ext_d.mnc ${TARGET_DIR}/${CASE}/temp/csf_from_gm_ext.mnc -clobber
 
 ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/temp/csf_from_gm_ext.mnc ${TARGET_DIR}/${CASE}/temp/csf_from_gm_ext.nii
 ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/temp/csf_from_gm.mnc ${TARGET_DIR}/${CASE}/temp/csf_from_gm.nii
-
-#############################################################
-# CSF segmentation - Intensity clustering using GMM.
-
-# GMM - Gaussian Mixture Model, Soft Clustering CSF/GM
-#### Prepare files
-${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/temp/cerebral_int.mnc ${TARGET_DIR}/${CASE}/temp/gmm_wm.nii
-${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/temp/cerebral_ext.mnc ${TARGET_DIR}/${CASE}/temp/gmm_gm.nii
-${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/input/${INPUT_NAME_POSPROCESS}.mnc ${TARGET_DIR}/${CASE}/temp/mri.nii
-
-#### Call Script
-python3 ${RESOURCES_DIR}/code/python/gmm_clustering.py \
-    -inPath ${TARGET_DIR}/${CASE}/temp \
-    -inMRI mri.nii \
-    -inWM gmm_wm.nii \
-    -inGM gmm_gm.nii \
-    -outPath ${TARGET_DIR}/${CASE}/temp \
-    -outCSF gmm_csf.nii \
-    -verbose 1 \
-    -plot 1 \
-    -threshold 0.67
-
-${RESOURCES_DIR}/bin/nii2mnc ${TARGET_DIR}/${CASE}/temp/gmm_csf.nii ${TARGET_DIR}/${CASE}/temp/gmm_csf.mnc
 
 #############################################################
 # Get GM including CSF/GM outer boundary,
@@ -134,6 +115,53 @@ ${RESOURCES_DIR}/bin/nii2mnc -clobber ${TARGET_DIR}/${CASE}/temp/skeleton.nii ${
 minccalc -clobber -expression 'if(A[0]>11.5){out=1}else{out=0}' ${TARGET_DIR}/${CASE}/temp/skeleton_.mnc ${TARGET_DIR}/${CASE}/temp/skeleton_1_corr.mnc
 
 ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/temp/skeleton_1_corr.mnc ${TARGET_DIR}/${CASE}/temp/skeleton_corr.nii
+
+#############################################################
+# CSF segmentation - Intensity clustering using GMM.
+
+# GMM - Gaussian Mixture Model, Soft Clustering CSF/GM
+#### Prepare files
+${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/temp/cerebral_int.mnc ${TARGET_DIR}/${CASE}/temp/gmm_wm.nii
+${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/temp/cerebral_ext.mnc ${TARGET_DIR}/${CASE}/temp/gmm_gm.nii
+${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/input/${INPUT_NAME_POSPROCESS}.mnc ${TARGET_DIR}/${CASE}/temp/mri.nii
+
+#### Call Script
+python3 ${RESOURCES_DIR}/code/python/MRI_sFCM.py \
+    -inPath ${TARGET_DIR}/${CASE}/temp \
+    -inMRI mri.nii \
+    -inWM gmm_wm.nii \
+    -inGM gmm_gm.nii \
+    -outPath ${TARGET_DIR}/${CASE}/temp \
+    -outCSF gmm_csf.nii \
+    -verbose 1 \
+    -plot 1 \
+    -threshold 0.67
+
+${RESOURCES_DIR}/bin/nii2mnc ${TARGET_DIR}/${CASE}/temp/gmm_csf.nii ${TARGET_DIR}/${CASE}/temp/gmm_csf.mnc
+
+#########################################################################
+# CSF segmentation - Intensity clustering using sFCM.
+
+# sFCM - Spatial Fuzzy C Means, Soft Clustering CSF/GM
+#### Prepare files
+${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/temp/cerebral_int.mnc ${TARGET_DIR}/${CASE}/temp/fcm_wm.nii
+${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/temp/cerebral_ext.mnc ${TARGET_DIR}/${CASE}/temp/fcm_gm.nii
+${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/input/${INPUT_NAME_POSPROCESS}.mnc ${TARGET_DIR}/${CASE}/temp/mri.nii
+
+#### Call Script
+python3 ${RESOURCES_DIR}/code/python/MRI_sFCM.py \
+    -inPath ${TARGET_DIR}/${CASE}/temp \
+    -inMRI mri.nii \
+    -inWM fcm_wm.nii \
+    -inGM fcm_gm.nii \
+    -outPath ${TARGET_DIR}/${CASE}/temp \
+    -outCSF fcm_csf.nii \
+    -verbose 1 \
+    -plot 1 \
+    -threshold 0.67
+
+${RESOURCES_DIR}/bin/nii2mnc ${TARGET_DIR}/${CASE}/temp/fcm_csf.nii ${TARGET_DIR}/${CASE}/temp/fcm_csf.mnc
+
 #########################################################################
 
 # Pial Surface Extraction, WM expansion. (Using GMM Intensity CSF joined with skeleton)
@@ -157,3 +185,6 @@ python3 ${RESOURCES_DIR}/code/python/pial_surface.py \
 
 #### Python venv - deactivate
 deactivate
+
+# Convert all mnc files to nii.
+source ${RESOURCES_DIR}/code/convertmnc.bash ${TARGET_DIR}/${CASE}/temp
