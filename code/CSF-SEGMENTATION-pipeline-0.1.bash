@@ -69,6 +69,9 @@ mincmath -not ${TARGET_DIR}/${CASE}/temp/cerebral_int_d.mnc ${TARGET_DIR}/${CASE
 # Binarize all segmentations [from 1 to 161]
 mincmath -segment -const2 1 161 ${TARGET_DIR}/${CASE}/input/${INPUT_SEG_NAME}.mnc ${TARGET_DIR}/${CASE}/temp/initial_segmentations.mnc -clobber
 
+# Dilation Initial Segmentations
+mincmorph -filetype -successive D ${TARGET_DIR}/${CASE}/temp/initial_segmentations.mnc -clobber ${TARGET_DIR}/${CASE}/temp/initial_segmentations_d.mnc
+
 # Remove Cerebellum
 mincmorph -filetype -successive DDDDDDD ${TARGET_DIR}/${CASE}/temp/initial_segmentations.mnc -clobber ${TARGET_DIR}/${CASE}/temp/initial_segmentations_7_dilated.mnc
 minccalc -expression 'if(A[0]==1){out=A[1]}else{out=0}' ${TARGET_DIR}/${CASE}/temp/initial_segmentations_7_dilated.mnc ${TARGET_DIR}/${CASE}/input/${INPUT_NAME}.mnc ${TARGET_DIR}/${CASE}/input/${INPUT_NAME_POSPROCESS}.mnc -clobber
@@ -77,7 +80,7 @@ minccalc -expression 'if(A[0]==1){out=A[1]}else{out=0}' ${TARGET_DIR}/${CASE}/te
 # GM External Boundary - 1th voxel apart.
 #   Subtract initial segmentations dilated from the dilated cerebral exterior.
 mincmath -not ${TARGET_DIR}/${CASE}/temp/initial_segmentations.mnc ${TARGET_DIR}/${CASE}/temp/initial_segmentations_not.mnc -clobber
-mincmath -and ${TARGET_DIR}/${CASE}/temp/initial_segmentations_not.mnc ${TARGET_DIR}/${CASE}/temp/cerebral_ext_d.mnc ${TARGET_DIR}/${CASE}/temp/gm_ext.mnc -clobber
+mincmath -and ${TARGET_DIR}/${CASE}/temp/initial_segmentations_not.mnc ${TARGET_DIR}/${CASE}/temp/initial_segmentations_d.mnc ${TARGET_DIR}/${CASE}/temp/gm_ext.mnc -clobber
 ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/temp/gm_ext.mnc ${TARGET_DIR}/${CASE}/temp/gm_ext.nii
 
 #############################################################
@@ -94,7 +97,7 @@ gzip -k ${TARGET_DIR}/${CASE}/temp/gm_grayscale.nii --verbose
 #### Skeleton
 ${RESOURCES_DIR}/bin/brainvisa-4.5.0/bin/VipSkeleton -i ${TARGET_DIR}/${CASE}/temp/gm_grayscale.nii.gz -so ${TARGET_DIR}/${CASE}/temp/skeleton_1.nii -vo ${TARGET_DIR}/${CASE}/temp/roots.nii -g ${TARGET_DIR}/${CASE}/temp/wm_and_gm.nii -p c -wp 0 -lz 0 -lu 10 -e 0.5 -mct 0 -gct -10
 #### Call Align Script
-python3 ${RESOURCES_DIR}/code/python/align_nii.py \
+python3 ${RESOURCES_DIR}/code/skeleton/align_nii.py \
     -inPath ${TARGET_DIR}/${CASE}/temp \
     -inNii skeleton_1.nii \
     -inTemplate gm_grayscale.nii \
@@ -121,7 +124,7 @@ ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/temp/gmm_input.mnc ${TARGET_D
 ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/input/${INPUT_NAME_POSPROCESS}.mnc ${TARGET_DIR}/${CASE}/temp/mri.nii
 
 #### Call Script
-python3 ${RESOURCES_DIR}/code/python/gmm_clustering_2.py \
+python3 ${RESOURCES_DIR}/code/skeleton/gmm_clustering_2.py \
     -inPath ${TARGET_DIR}/${CASE}/temp \
     -inMRI mri.nii \
     -inVOL gmm_input.nii \
@@ -143,7 +146,7 @@ ${RESOURCES_DIR}/bin/nii2mnc ${TARGET_DIR}/${CASE}/temp/gmm_csf.nii ${TARGET_DIR
 # ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/input/${INPUT_NAME_POSPROCESS}.mnc ${TARGET_DIR}/${CASE}/temp/mri.nii
 
 #### Call Script
-# python3 ${RESOURCES_DIR}/code/python/MRI_sFCM.py \
+# python3 ${RESOURCES_DIR}/code/skeleton/MRI_sFCM.py \
 #     -inPath ${TARGET_DIR}/${CASE}/temp \
 #     -inMRI mri.nii \
 #     -inWM fcm_wm.nii \
@@ -168,7 +171,7 @@ ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/temp/cerebral_int.mnc ${TARGE
 ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/temp/cerebral_ext.mnc ${TARGET_DIR}/${CASE}/temp/ps2_gm.nii
 ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/input/${INPUT_NAME_POSPROCESS}.mnc ${TARGET_DIR}/${CASE}/temp/mri.nii
 #### Call Script
-python3 ${RESOURCES_DIR}/code/python/pial_surface.py \
+python3 ${RESOURCES_DIR}/code/skeleton/pial_surface.py \
     -inPath ${TARGET_DIR}/${CASE}/temp \
     -inMRI mri.nii \
     -inCSF ps2_csf.nii \
