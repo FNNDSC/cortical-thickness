@@ -25,6 +25,12 @@ INPUT_NAME_POSPROCESS=recon_to31_posprocess
 INPUT_SEG_NAME=segmentation_to31_final
 
 # Setup Dependencies
+. neuro-fs stable 6.0;
+FSLDIR=/neuro/users/jose.cisneros/arch/Linux64/packages/fsl/6.0;
+. ${FSLDIR}/etc/fslconf/fsl.sh;
+PATH=${FSLDIR}/bin:${PATH};
+export FSLDIR PATH;
+PATH="${RESOURCES_DIR}/bin:"$PATH
 LD_LIBRARY_PATH="${RESOURCES_DIR}/lib:"$LD_LIBRARY_PATH
 LD_LIBRARY_PATH="${RESOURCES_DIR}/bin/brainvisa-4.5.0/lib:"$LD_LIBRARY_PATH
 
@@ -77,6 +83,9 @@ mincmorph -filetype -successive DDDDDDD ${TARGET_DIR}/${CASE}/temp/initial_segme
 minccalc -expression 'if(A[0]==1){out=A[1]}else{out=0}' ${TARGET_DIR}/${CASE}/temp/initial_segmentations_7_dilated.mnc ${TARGET_DIR}/${CASE}/input/${INPUT_NAME}.mnc ${TARGET_DIR}/${CASE}/input/${INPUT_NAME_POSPROCESS}.mnc -clobber
 
 #############################################################
+###################### START SKELETON #######################
+#############################################################
+
 # GM External Boundary - 1th voxel apart.
 #   Subtract initial segmentations dilated from the dilated cerebral exterior.
 mincmath -not ${TARGET_DIR}/${CASE}/temp/initial_segmentations.mnc ${TARGET_DIR}/${CASE}/temp/initial_segmentations_not.mnc -clobber
@@ -183,6 +192,21 @@ python3 ${RESOURCES_DIR}/code/skeleton/pial_surface.py \
     -iterations 10 \
     -verbose 1 \
     -plot 1
+
+#############################################################
+###################### END SKELETON #########################
+#############################################################
+
+#############################################################
+############### START SURFACE EXTRACTION ####################
+#############################################################
+
+source ${RESOURCES_DIR}/code/WHITE-EXTRACTION.bash ${CASE}
+source ${RESOURCES_DIR}/code/SURFACE-EXTRACTION.bash ${CASE}
+
+#############################################################
+################ END SURFACE EXTRACTION #####################
+#############################################################
 
 #### Python venv - deactivate
 deactivate
