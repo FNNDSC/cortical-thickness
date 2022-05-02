@@ -24,6 +24,11 @@ INPUT_NAME=recon_to31
 INPUT_NAME_POSPROCESS=recon_to31_posprocess
 INPUT_SEG_NAME=segmentation_to31_final
 
+# Flag to use Intensity Method for Skeleton Refinement.
+USE_INTENSITY=true
+# Flag to do Surface Extraction.
+DO_SURFACE_EXTRACTION=true
+
 # Setup Dependencies
 . neuro-fs stable 6.0;
 FSLDIR=/neuro/users/jose.cisneros/arch/Linux64/packages/fsl/6.0;
@@ -45,6 +50,10 @@ source ${RESOURCES_DIR}/bin/pyenv/bin/activate
 # 160: Right-Cerebral-WM
 # 161: Left-Cerebral-WM
 ###############################
+EXT_LEFT=1
+EXT_RIGHT=42
+INT_RIGHT=160
+INT_LEFT=161
 
 # Conversion input from .nii to .mnc
 ${RESOURCES_DIR}/bin/nii2mnc -clobber ${BASE_DIR}/${CASE}/${INPUT_NAME}.nii ${TARGET_DIR}/${CASE}/input/${INPUT_NAME}.mnc -float
@@ -56,16 +65,16 @@ ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/input/${INPUT_SEG_NAME}.mnc $
 ${RESOURCES_DIR}/bin/nii2mnc -clobber ${TARGET_DIR}/${CASE}/input/${INPUT_SEG_NAME}.nii ${TARGET_DIR}/${CASE}/input/${INPUT_SEG_NAME}.mnc -float
 
 # Segment and Join Cerebral Exterior Labels 1 & 42.
-mincmath -segment -const2 0.5 1.5 ${TARGET_DIR}/${CASE}/input/${INPUT_SEG_NAME}.mnc ${TARGET_DIR}/${CASE}/temp/cerebral_left_ext.mnc -clobber
-mincmath -segment -const2 41.5 42.5 ${TARGET_DIR}/${CASE}/input/${INPUT_SEG_NAME}.mnc ${TARGET_DIR}/${CASE}/temp/cerebral_right_ext.mnc -clobber
+mincmath -clobber -eq -const $EXT_LEFT ${TARGET_DIR}/${CASE}/input/${INPUT_SEG_NAME}.mnc ${TARGET_DIR}/${CASE}/temp/cerebral_left_ext.mnc
+mincmath -clobber -eq -const $EXT_RIGHT ${TARGET_DIR}/${CASE}/input/${INPUT_SEG_NAME}.mnc ${TARGET_DIR}/${CASE}/temp/cerebral_right_ext.mnc
 mincmath -or ${TARGET_DIR}/${CASE}/temp/cerebral_left_ext.mnc ${TARGET_DIR}/${CASE}/temp/cerebral_right_ext.mnc ${TARGET_DIR}/${CASE}/temp/cerebral_ext.mnc -clobber
 
 # Dilation Cerebral Exterior
 mincmorph -filetype -successive D ${TARGET_DIR}/${CASE}/temp/cerebral_ext.mnc -clobber ${TARGET_DIR}/${CASE}/temp/cerebral_ext_d.mnc
 
 # Segment and Join Cerebral Interior Labels 160 & 161.
-mincmath -segment -const2 159.5 160.5 ${TARGET_DIR}/${CASE}/input/${INPUT_SEG_NAME}.mnc ${TARGET_DIR}/${CASE}/temp/cerebral_left_int.mnc -clobber
-mincmath -segment -const2 160.5 161.5 ${TARGET_DIR}/${CASE}/input/${INPUT_SEG_NAME}.mnc ${TARGET_DIR}/${CASE}/temp/cerebral_right_int.mnc -clobber
+mincmath -clobber -eq -const $INT_LEFT ${TARGET_DIR}/${CASE}/input/${INPUT_SEG_NAME}.mnc ${TARGET_DIR}/${CASE}/temp/cerebral_left_int.mnc
+mincmath -clobber -eq -const $INT_RIGHT ${TARGET_DIR}/${CASE}/input/${INPUT_SEG_NAME}.mnc ${TARGET_DIR}/${CASE}/temp/cerebral_right_int.mnc
 mincmath -or ${TARGET_DIR}/${CASE}/temp/cerebral_left_int.mnc ${TARGET_DIR}/${CASE}/temp/cerebral_right_int.mnc ${TARGET_DIR}/${CASE}/temp/cerebral_int.mnc -clobber
 
 # Dilation Cerebral Interior
@@ -104,15 +113,29 @@ ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/temp/gm_grayscale.mnc ${TARGE
 gzip -k ${TARGET_DIR}/${CASE}/temp/gm_grayscale.nii --verbose
 
 #### Skeleton
-${RESOURCES_DIR}/bin/brainvisa-4.5.0/bin/VipSkeleton -i ${TARGET_DIR}/${CASE}/temp/gm_grayscale.nii.gz -so ${TARGET_DIR}/${CASE}/temp/skeleton_1.nii -vo ${TARGET_DIR}/${CASE}/temp/roots.nii -g ${TARGET_DIR}/${CASE}/temp/wm_and_gm.nii -p c -wp 0 -lz 0 -lu 10 -e 0.5 -mct 0 -gct -10
-#### Call Align Script
+${RESOURCES_DIR}/bin/brainvisa-4.5.0/bin/VipSkeleton \
+    -i ${TARGET_DIR}/${CASE}/temp/gm_grayscale.nii.gz \
+    -so ${TARGET_DIR}/${CASE}/temp/skeleton_1.nii \
+    -vo ${TARGET_DIR}/${CASE}/temp/roots_1.nii \
+    -g ${TARGET_DIR}/${CASE}/temp/wm_and_gm.nii \
+    -p c -wp 0 -lz 0 -lu 10 -e 0.5 -mct 0 -gct -10
+
+#### Align Skeleton To Original MRI
 python3 ${RESOURCES_DIR}/code/skeleton/align_nii.py \
     -inPath ${TARGET_DIR}/${CASE}/temp \
     -inNii skeleton_1.nii \
     -inTemplate gm_grayscale.nii \
     -outPath ${TARGET_DIR}/${CASE}/temp \
     -outNii skeleton.nii \
-    -verbose 1 \
+    -verbose 1
+#### Align Roots To Original MRI
+python3 ${RESOURCES_DIR}/code/skeleton/align_nii.py \
+    -inPath ${TARGET_DIR}/${CASE}/temp \
+    -inNii roots_1.nii \
+    -inTemplate gm_grayscale.nii \
+    -outPath ${TARGET_DIR}/${CASE}/temp \
+    -outNii roots.nii \
+    -verbose 1
 
 # Binarize Skeleton
 ${RESOURCES_DIR}/bin/nii2mnc -clobber ${TARGET_DIR}/${CASE}/temp/skeleton.nii ${TARGET_DIR}/${CASE}/temp/skeleton_.mnc -float
@@ -193,6 +216,12 @@ python3 ${RESOURCES_DIR}/code/skeleton/pial_surface.py \
     -verbose 1 \
     -plot 1
 
+if [ $USE_INTENSITY = true ]
+    ${RESOURCES_DIR}/bin/nii2mnc ${TARGET_DIR}/${CASE}/output/ps2.nii ${TARGET_DIR}/${CASE}/output/skeleton_output.mnc -clobber
+else
+    cp ${TARGET_DIR}/${CASE}/temp/skeleton_2_corr.mnc ${TARGET_DIR}/${CASE}/output/skeleton_output.mnc
+fi
+
 #############################################################
 ###################### END SKELETON #########################
 #############################################################
@@ -201,9 +230,10 @@ python3 ${RESOURCES_DIR}/code/skeleton/pial_surface.py \
 ############### START SURFACE EXTRACTION ####################
 #############################################################
 
+if [ $DO_SURFACE_EXTRACTION = true ]
 source ${RESOURCES_DIR}/code/WHITE-EXTRACTION.bash ${CASE}
 source ${RESOURCES_DIR}/code/SURFACE-EXTRACTION.bash ${CASE}
-
+fi
 #############################################################
 ################ END SURFACE EXTRACTION #####################
 #############################################################

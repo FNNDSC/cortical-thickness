@@ -8,10 +8,8 @@
 use strict;
 use warnings "all";
 
-use FindBin;
-
-require "$FindBin::Bin/../lib/surface-extraction/utils.pl";
-require "$FindBin::Bin/../lib/surface-extraction/deform_utils.pl";
+require "$ENV{RESOURCES_DIR}/lib/surface-extraction/utils.pl";
+require "$ENV{RESOURCES_DIR}/lib/surface-extraction/deform_utils.pl";
 
 use Getopt::Tabular;
 use MNI::Startup;

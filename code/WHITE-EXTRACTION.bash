@@ -15,9 +15,6 @@ INPUT_NAME=recon_to31
 INPUT_NAME_POSPROCESS=recon_to31_posprocess
 INPUT_SEG_NAME=segmentation_to31_final
 
-# Dependencies
-source /neuro/labs/grantlab/research/HyukJin_MRI/CIVET/quarantines/Linux-x86_64/init.sh;
-
 rm -rf ${TARGET_DIR}/${CASE}/surfaces
 mkdir -p ${TARGET_DIR}/${CASE}/surfaces
 
@@ -38,19 +35,3 @@ ${RESOURCES_DIR}/bin/transform_objects ${TARGET_DIR}/${CASE}/surfaces/rh.smoothw
 # Freesurfer format
 ${RESOURCES_DIR}/bin/obj2asc ${TARGET_DIR}/${CASE}/surfaces/lh.smoothwm.native.obj ${TARGET_DIR}/${CASE}/surfaces/lh.smoothwm.native.asc;
 ${RESOURCES_DIR}/bin/obj2asc ${TARGET_DIR}/${CASE}/surfaces/rh.smoothwm.native.obj ${TARGET_DIR}/${CASE}/surfaces/rh.smoothwm.native.asc;
-
-
-
-# matlab_ulsan -nodisplay << EOF 
-
-# addpath (genpath('${RESOURCES_DIR}/code/surfaceExtraction'))
-# INPUT='${TARGET_DIR}/${CASE}/input/${INPUT_SEG_NAME}.nii'
-# OUTPUT_L='${TARGET_DIR}/${CASE}/temp/lh.white'
-# OUTPUT_R='${TARGET_DIR}/${CASE}/temp/rh.white'
-# brainseg_isofurface(INPUT, 161, OUTPUT_L)
-# brainseg_isofurface(INPUT, 160, OUTPUT_R)
-
-# EOF
-
-# mris_smooth -n 3 ${TARGET_DIR}/${CASE}/temp/lh.white ${TARGET_DIR}/${CASE}/temp/lh.smoothwm
-# mris_smooth -n 3 ${TARGET_DIR}/${CASE}/temp/rh.white ${TARGET_DIR}/${CASE}/temp/rh.smoothwm
