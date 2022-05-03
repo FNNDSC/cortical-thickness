@@ -10,11 +10,12 @@ import matplotlib.pyplot as plt
 from matplotlib import colors
 
 class sFCM():
-    def __init__(self, n_clusters, min_error = 1e-5, max_iter = 500, verbose = True):
+    def __init__(self, n_clusters, min_error = 1e-5, max_iter = 500, verbose = True, kernel = "06"):
         self.n_clusters = n_clusters
         self.min_error = min_error
         self.max_iter = max_iter
         self.verbose = verbose
+        self.kernel = kernel
         self.trained = False
         self.m = 2
         self.p = 1
@@ -33,16 +34,21 @@ class sFCM():
         avgX = X.copy()
         for i in range(self.n_clusters):
             for k in range(self.n_samples):
-                Fik[k][i], avgX[k] = self.Fik_06(i, k, X, _1DTo3D, _3DTo1D, map3D)
-        print(Fik)
+                if self.kernel = "06":
+                    Fik[k][i], avgX[k] = self.Fik_06(i, k, X, _1DTo3D, _3DTo1D, map3D)
+                else:
+                    Fik[k][i], avgX[k] = self.Fik_26(i, k, X, _1DTo3D, _3DTo1D, map3D)
+
         temp = sFCM._dist(avgX, self._v) ** (2 / (self.m - 1))
         denominator_ = temp.reshape((avgX.shape[0], 1, -1)).repeat(
             temp.shape[-1], axis=1
         )
         denominator_ = temp[:, :, np.newaxis] / denominator_
-        self.u_ = (Fik ** (1 / (self.m - 1))) / denominator_.sum(2)
+        denominator_ = 1 / denominator_.sum(2)
+        numerator_ = (Fik ** (1 / (self.m - 1)))
+        self.u_ = (numerator_ + denominator_) / 2
 
-        return sFCM._z(self.u, self.u_, self.p, self.q)
+        return sFCM._z(self.u, self.u_, self.p, self.q, self.n_clusters)
 
     def init_prob(self):
         rng = np.random.default_rng()
@@ -56,7 +62,7 @@ class sFCM():
         self.n_samples = X.shape[0]
         self.u = self.init_prob()
         self.u_ = self.init_prob()
-        self.z = sFCM._z(self.u, self.u_, self.p, self.q)
+        self.z = sFCM._z(self.u, self.u_, self.p, self.q, self.n_clusters)
         for i in range(self.max_iter):
             z_old = self.z.copy()
             self._v = sFCM._v(X, self.u, self.m)
@@ -90,7 +96,7 @@ class sFCM():
                     if neighbor in map3D and map3D[neighbor] != 0:
                         index1D = _3DTo1D[neighbor]
                         sumX += X[index1D]
-                        if self.u[index1D][i] > 0.5 or (self.u[index1D][i] == 0.5 and i == 0):
+                        if self.u[index1D][i] >= 0.5:
                             count+=1
                     else:
                         M -= 1
@@ -124,7 +130,7 @@ class sFCM():
                 if checkIndex(neighbor, map3D) and map3D[neighbor] != 0:
                     index1D = _3DTo1D[neighbor]
                     sumX += X[index1D]
-                    if self.u[index1D][i] > 0.6:
+                    if self.u[index1D][i] >= 0.5:
                         count+=1
                 else:
                     M -= 1
@@ -144,12 +150,14 @@ class sFCM():
         return (X.T @ um / np.sum(um, axis=0)).T
     
     @staticmethod
-    def _z(u, u_, p, q):
+    def _z(u, u_, p, q, n_clusters):
         """Weighted Joint Membership function z"""
         up = u**p
         u_q = u_**q
-        return (up * u_q / np.sum(up * u_q, axis=0))
-    
+        return ( (up * u_q) / np.tile(
+            np.sum(up * u_q, axis=1)[np.newaxis].T, n_clusters
+        ))
+
     @staticmethod
     def _w(X, z, m):
         """Weighted cluster centers w"""

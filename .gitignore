@@ -4,3 +4,5 @@ Samples/
 lib/
 share/
 rootsvoronoi*
+error.log
+code/skeleton/__pycache__/*

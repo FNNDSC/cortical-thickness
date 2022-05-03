@@ -24,10 +24,13 @@ INPUT_NAME=recon_to31
 INPUT_NAME_POSPROCESS=recon_to31_posprocess
 INPUT_SEG_NAME=segmentation_to31_final
 
+# Flag to do Surface Extraction.
+ENABLE_SURFACE_EXTRACTION=false
 # Flag to use Intensity Method for Skeleton Refinement.
 USE_INTENSITY=true
-# Flag to do Surface Extraction.
-DO_SURFACE_EXTRACTION=true
+# Clustering Method.
+CLUSTERING_METHODS=("GMM" "FCM" "sFCM")
+CLUSTERING_METHOD=${CLUSTERING_METHODS[2]}
 
 # Setup Dependencies
 . neuro-fs stable 6.0;
@@ -145,78 +148,106 @@ minccalc -clobber -expression 'if(A[0]>11.5){out=1}else{out=0}' ${TARGET_DIR}/${
 mincmath -or ${TARGET_DIR}/${CASE}/temp/gm_ext.mnc ${TARGET_DIR}/${CASE}/temp/skeleton_1_corr.mnc  -clobber ${TARGET_DIR}/${CASE}/temp/skeleton_2_corr.mnc
 ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/temp/skeleton_2_corr.mnc ${TARGET_DIR}/${CASE}/temp/skeleton_corr.nii
 
+# Clustering Input Volume: GM -> 1 extra outer voxel and without 1 inner voxel.
+mincmath -and ${TARGET_DIR}/${CASE}/temp/cerebral_int_d_not.mnc ${TARGET_DIR}/${CASE}/temp/cerebral_ext_d.mnc ${TARGET_DIR}/${CASE}/temp/clustering_input.mnc -clobber
+
 #############################################################
 # CSF segmentation - Intensity clustering using GMM.
 
-# GMM - Gaussian Mixture Model, Soft Clustering CSF/GM
-# Clustering Input Volume: GM -> 1 extra outer voxel and without 1 inner voxel.
-mincmath -and ${TARGET_DIR}/${CASE}/temp/cerebral_int_d_not.mnc ${TARGET_DIR}/${CASE}/temp/cerebral_ext_d.mnc ${TARGET_DIR}/${CASE}/temp/gmm_input.mnc -clobber
-#### Prepare files
-${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/temp/gmm_input.mnc ${TARGET_DIR}/${CASE}/temp/gmm_input.nii
-${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/input/${INPUT_NAME_POSPROCESS}.mnc ${TARGET_DIR}/${CASE}/temp/mri.nii
+if [ $CLUSTERING_METHOD = "GMM" ] && [ $USE_INTENSITY = true ]; then
+    # GMM - Gaussian Mixture Model, Soft Clustering CSF/GM
+    #### Prepare files
+    ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/temp/clustering_input.mnc ${TARGET_DIR}/${CASE}/temp/clustering_input.nii
+    ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/input/${INPUT_NAME_POSPROCESS}.mnc ${TARGET_DIR}/${CASE}/temp/mri.nii
 
-#### Call Script
-python3 ${RESOURCES_DIR}/code/skeleton/gmm_clustering_2.py \
-    -inPath ${TARGET_DIR}/${CASE}/temp \
-    -inMRI mri.nii \
-    -inVOL gmm_input.nii \
-    -outPath ${TARGET_DIR}/${CASE}/temp \
-    -outCSF gmm_csf.nii \
-    -verbose 1 \
-    -plot 1 \
-    -threshold 0.67
+    #### Call Script
+    python3 ${RESOURCES_DIR}/code/skeleton/gmm_clustering.py \
+        -inPath ${TARGET_DIR}/${CASE}/temp \
+        -inMRI mri.nii \
+        -inVOL clustering_input.nii \
+        -outPath ${TARGET_DIR}/${CASE}/temp \
+        -outCSF gmm_csf.nii \
+        -verbose 1 \
+        -plot 1 \
+        -threshold 0.67
 
-${RESOURCES_DIR}/bin/nii2mnc ${TARGET_DIR}/${CASE}/temp/gmm_csf.nii ${TARGET_DIR}/${CASE}/temp/gmm_csf.mnc
+    ${RESOURCES_DIR}/bin/nii2mnc ${TARGET_DIR}/${CASE}/temp/gmm_csf.nii ${TARGET_DIR}/${CASE}/temp/gmm_csf.mnc
+    cp ${TARGET_DIR}/${CASE}/temp/gmm_csf.mnc ${TARGET_DIR}/${CASE}/temp/clustering_output.mnc
+fi
+
+#########################################################################
+# CSF segmentation - Intensity clustering using FCM.
+
+if [ $CLUSTERING_METHOD = "FCM" ] && [ $USE_INTENSITY = true ]; then
+    # FCM - Fuzzy C Means, Soft Clustering CSF/GM
+    #### Prepare files
+    ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/temp/clustering_input.mnc ${TARGET_DIR}/${CASE}/temp/clustering_input.nii
+    ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/input/${INPUT_NAME_POSPROCESS}.mnc ${TARGET_DIR}/${CASE}/temp/mri.nii
+
+    #### Call Script
+    python3 ${RESOURCES_DIR}/code/skeleton/MRI_FCM.py \
+        -inPath ${TARGET_DIR}/${CASE}/temp \
+        -inMRI mri.nii \
+        -inVOL clustering_input.nii \
+        -outPath ${TARGET_DIR}/${CASE}/temp \
+        -outCSF fcm_csf.nii \
+        -verbose 1 \
+        -plot 1 \
+        -threshold 0.67
+
+    ${RESOURCES_DIR}/bin/nii2mnc ${TARGET_DIR}/${CASE}/temp/fcm_csf.nii ${TARGET_DIR}/${CASE}/temp/fcm_csf.mnc
+    cp ${TARGET_DIR}/${CASE}/temp/fcm_csf.mnc ${TARGET_DIR}/${CASE}/temp/clustering_output.mnc
+fi
 
 #########################################################################
 # CSF segmentation - Intensity clustering using sFCM.
 
-# sFCM - Spatial Fuzzy C Means, Soft Clustering CSF/GM
-#### Prepare files
-# ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/temp/cerebral_int.mnc ${TARGET_DIR}/${CASE}/temp/fcm_wm.nii
-# ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/temp/cerebral_ext.mnc ${TARGET_DIR}/${CASE}/temp/fcm_gm.nii
-# ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/input/${INPUT_NAME_POSPROCESS}.mnc ${TARGET_DIR}/${CASE}/temp/mri.nii
+if [ $CLUSTERING_METHOD = "sFCM" ] && [ $USE_INTENSITY = true ]; then
+    # sFCM - Spatial Fuzzy C Means, Soft Clustering CSF/GM
+    #### Prepare files
+    ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/temp/clustering_input.mnc ${TARGET_DIR}/${CASE}/temp/clustering_input.nii
+    ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/input/${INPUT_NAME_POSPROCESS}.mnc ${TARGET_DIR}/${CASE}/temp/mri.nii
 
-#### Call Script
-# python3 ${RESOURCES_DIR}/code/skeleton/MRI_sFCM.py \
-#     -inPath ${TARGET_DIR}/${CASE}/temp \
-#     -inMRI mri.nii \
-#     -inWM fcm_wm.nii \
-#     -inGM fcm_gm.nii \
-#     -outPath ${TARGET_DIR}/${CASE}/temp \
-#     -outCSF fcm_csf.nii \
-#     -verbose 1 \
-#     -plot 1 \
-#     -threshold 0.67
+    #### Call Script
+    python3 ${RESOURCES_DIR}/code/skeleton/MRI_sFCM.py \
+        -inPath ${TARGET_DIR}/${CASE}/temp \
+        -inMRI mri.nii \
+        -inVOL clustering_input.nii \
+        -outPath ${TARGET_DIR}/${CASE}/temp \
+        -outCSF sfcm_csf.nii \
+        -verbose 1 \
+        -plot 1 \
+        -threshold 0.67
 
-# ${RESOURCES_DIR}/bin/nii2mnc ${TARGET_DIR}/${CASE}/temp/fcm_csf.nii ${TARGET_DIR}/${CASE}/temp/fcm_csf.mnc
+    ${RESOURCES_DIR}/bin/nii2mnc ${TARGET_DIR}/${CASE}/temp/sfcm_csf.nii ${TARGET_DIR}/${CASE}/temp/sfcm_csf.mnc
+    cp ${TARGET_DIR}/${CASE}/temp/sfcm_csf.mnc ${TARGET_DIR}/${CASE}/temp/clustering_output.mnc
+fi
 
 #########################################################################
 
-# Pial Surface Extraction, WM expansion. (Using GMM Intensity CSF joined with skeleton)
+# Pial Surface Extraction, WM expansion. (Using GMM Intensity CSF defined by Intensity joined with skeleton)
 
-#### Join GMM_CSF with Skeleton limiting inner boundary to skeleton.
-mincmath -or ${TARGET_DIR}/${CASE}/temp/gmm_csf.mnc ${TARGET_DIR}/${CASE}/temp/skeleton_2_corr.mnc -clobber ${TARGET_DIR}/${CASE}/temp/ps2_csf.mnc
-#### Prepare files
-${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/temp/ps2_csf.mnc ${TARGET_DIR}/${CASE}/temp/ps2_csf.nii
-${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/temp/cerebral_int.mnc ${TARGET_DIR}/${CASE}/temp/ps2_wm.nii
-${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/temp/cerebral_ext.mnc ${TARGET_DIR}/${CASE}/temp/ps2_gm.nii
-${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/input/${INPUT_NAME_POSPROCESS}.mnc ${TARGET_DIR}/${CASE}/temp/mri.nii
-#### Call Script
-python3 ${RESOURCES_DIR}/code/skeleton/pial_surface.py \
-    -inPath ${TARGET_DIR}/${CASE}/temp \
-    -inMRI mri.nii \
-    -inCSF ps2_csf.nii \
-    -inWM ps2_wm.nii \
-    -inGM ps2_gm.nii \
-    -inSK skeleton_corr.nii \
-    -outPath ${TARGET_DIR}/${CASE}/output \
-    -outPS ps2.nii \
-    -iterations 10 \
-    -verbose 1 \
-    -plot 1
-
-if [ $USE_INTENSITY = true ]
+if [ $USE_INTENSITY = true ]; then
+    #### Join Clustering Output with Skeleton limiting inner boundary to skeleton.
+    mincmath -or ${TARGET_DIR}/${CASE}/temp/clustering_output.mnc ${TARGET_DIR}/${CASE}/temp/skeleton_2_corr.mnc -clobber ${TARGET_DIR}/${CASE}/temp/ps2_csf.mnc
+    #### Prepare files
+    ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/temp/ps2_csf.mnc ${TARGET_DIR}/${CASE}/temp/ps2_csf.nii
+    ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/temp/cerebral_int.mnc ${TARGET_DIR}/${CASE}/temp/ps2_wm.nii
+    ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/temp/cerebral_ext.mnc ${TARGET_DIR}/${CASE}/temp/ps2_gm.nii
+    ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/input/${INPUT_NAME_POSPROCESS}.mnc ${TARGET_DIR}/${CASE}/temp/mri.nii
+    #### Call Script
+    python3 ${RESOURCES_DIR}/code/skeleton/pial_surface.py \
+        -inPath ${TARGET_DIR}/${CASE}/temp \
+        -inMRI mri.nii \
+        -inCSF ps2_csf.nii \
+        -inWM ps2_wm.nii \
+        -inGM ps2_gm.nii \
+        -inSK skeleton_corr.nii \
+        -outPath ${TARGET_DIR}/${CASE}/output \
+        -outPS ps2.nii \
+        -iterations 10 \
+        -verbose 1 \
+        -plot 1
     ${RESOURCES_DIR}/bin/nii2mnc ${TARGET_DIR}/${CASE}/output/ps2.nii ${TARGET_DIR}/${CASE}/output/skeleton_output.mnc -clobber
 else
     cp ${TARGET_DIR}/${CASE}/temp/skeleton_2_corr.mnc ${TARGET_DIR}/${CASE}/output/skeleton_output.mnc
@@ -230,9 +261,9 @@ fi
 ############### START SURFACE EXTRACTION ####################
 #############################################################
 
-if [ $DO_SURFACE_EXTRACTION = true ]
-source ${RESOURCES_DIR}/code/WHITE-EXTRACTION.bash ${CASE}
-source ${RESOURCES_DIR}/code/SURFACE-EXTRACTION.bash ${CASE}
+if [ $ENABLE_SURFACE_EXTRACTION = true ]; then
+    source ${RESOURCES_DIR}/code/WHITE-EXTRACTION.bash ${CASE}
+    source ${RESOURCES_DIR}/code/SURFACE-EXTRACTION.bash ${CASE}
 fi
 #############################################################
 ################ END SURFACE EXTRACTION #####################

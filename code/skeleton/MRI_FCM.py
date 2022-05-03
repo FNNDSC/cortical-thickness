@@ -78,7 +78,7 @@ class MRI_FCM():
             self.saveNII(self.args.OUT_PATH + "/" + self.args.OUT_CSF, self.outputMaskL2)
             self.saveNII(self.args.OUT_PATH + "/_" + self.args.OUT_CSF, self.outputMaskL1)
 
-    def plot(self, x, data, name="gmm"):
+    def plot(self, x, data, name="FCM"):
         data = data.T
         self.showInfo("Data Ready " + str(data.shape) )
 
@@ -109,9 +109,9 @@ class MRI_FCM():
         parser = argparse.ArgumentParser("   ==========   Gaussian Mixture Model, Soft Clustering CSF/GM by Jose Cisneros (March 22), 2022 ver.1)   ==========   ")
         parser.add_argument("-inPath", "--IN_PATH",action="store",dest="IN_PATH",type=str, default="/neuro/labs/grantlab/research/MRI_processing/jose.cisneros/CSFSegmentation/Results/FCB028/temp", help="input folder")
         parser.add_argument("-inMRI", "--IN_MRI",action="store",dest="IN_MRI",type=str, default="mri.nii", help="input .nii file containing MRI with intensities")
-        parser.add_argument("-inVOL", "--IN_VOL",action="store",dest="IN_VOL",type=str, default="gmm_input.nii", help="input binarize .nii file containing CSF & GM")
+        parser.add_argument("-inVOL", "--IN_VOL",action="store",dest="IN_VOL",type=str, default="FCM_input.nii", help="input binarize .nii file containing CSF & GM")
         parser.add_argument("-outPath", "--OUT_PATH",action="store",dest="OUT_PATH",type=str, default="/neuro/labs/grantlab/research/MRI_processing/jose.cisneros/CSFSegmentation/Results/FCB028/temp", help="output folder")
-        parser.add_argument("-outCSF", "--OUT_CSF",action="store",dest="OUT_CSF",type=str, default="gmm_csf.nii", help="output binarize .nii file containing improved CSF")
+        parser.add_argument("-outCSF", "--OUT_CSF",action="store",dest="OUT_CSF",type=str, default="FCM_csf.nii", help="output binarize .nii file containing improved CSF")
         parser.add_argument("-verbose", "--VERBOSE",action="store",dest="VERBOSE",type=bool, default=True, help="Show logs")
         parser.add_argument("-plot", "--PLOT",action="store",dest="PLOT",type=bool, default=False, help="Save Plot")
         parser.add_argument("-threshold", "--THRESHOLD",action="store",dest="THRESHOLD",type=float, default=0.62, help="Threshold Probability of being CSF")

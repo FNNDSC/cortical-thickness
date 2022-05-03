@@ -30,8 +30,7 @@ class GmmClustering():
         self.run()
     
     def run(self):
-        self.wmData = ndimage.binary_dilation(self.wmData, iterations=1) # 3D06 Kernel
-        mriDataFiltered = self.mriData * np.logical_not(self.wmData) # GM & CSF = Brain - WM.
+        mriDataFiltered = self.mriData * self.inData 
         
         # Split Input Data, Value, Index
         intensities = []
@@ -69,8 +68,10 @@ class GmmClustering():
         
         if (np.mean(self.outputDataL1) > np.mean(self.outputDataL2)):
             self.saveNII(self.args.OUT_PATH + "/" + self.args.OUT_CSF, self.outputMaskL1)
+            self.saveNII(self.args.OUT_PATH + "/no_" + self.args.OUT_CSF, self.outputMaskL2)
         else:
             self.saveNII(self.args.OUT_PATH + "/" + self.args.OUT_CSF, self.outputMaskL2)
+            self.saveNII(self.args.OUT_PATH + "/no_" + self.args.OUT_CSF, self.outputMaskL1)
 
     def plot(self, x, data, name="gmm"):
         data = data.T
@@ -92,12 +93,9 @@ class GmmClustering():
         self.showInfo("Nii File Saved. " + name)
 
     def loadData(self):
-        self.nii = load(self.args.IN_PATH + "/" + self.args.IN_WM)
-        self.wmData = np.asarray(self.nii.dataobj)
-        self.showInfo("WM Data Loaded: " + str(self.wmData.shape))
-        self.nii = load(self.args.IN_PATH + "/" + self.args.IN_GM)
-        self.gmData = np.asarray(self.nii.dataobj)
-        self.showInfo("GM Data Loaded: " + str(self.gmData.shape))
+        self.nii = load(self.args.IN_PATH + "/" + self.args.IN_VOL)
+        self.inData = np.asarray(self.nii.dataobj)
+        self.showInfo("IN Data Loaded: " + str(self.inData.shape))
         self.nii = load(self.args.IN_PATH + "/" + self.args.IN_MRI)
         self.mriData = np.asarray(self.nii.dataobj)
         self.showInfo("MRI Data Loaded: " + str(self.mriData.shape))
@@ -106,8 +104,7 @@ class GmmClustering():
         parser = argparse.ArgumentParser("   ==========   Gaussian Mixture Model, Soft Clustering CSF/GM by Jose Cisneros (March 22), 2022 ver.1)   ==========   ")
         parser.add_argument("-inPath", "--IN_PATH",action="store",dest="IN_PATH",type=str, default="/neuro/labs/grantlab/research/MRI_processing/jose.cisneros/CSFSegmentation/Results/FCB028/temp", help="input folder")
         parser.add_argument("-inMRI", "--IN_MRI",action="store",dest="IN_MRI",type=str, default="mri.nii", help="input .nii file containing MRI with intensities")
-        parser.add_argument("-inWM", "--IN_WM",action="store",dest="IN_WM",type=str, default="gmm_wm.nii", help="input binarize .nii file containing White Matter")
-        parser.add_argument("-inGM", "--IN_GM",action="store",dest="IN_GM",type=str, default="gmm_gm.nii", help="input binarize .nii file containing Gray Matter")
+        parser.add_argument("-inVOL", "--IN_VOL",action="store",dest="IN_VOL",type=str, default="gmm_input.nii", help="input binarize .nii file containing CSF & GM")
         parser.add_argument("-outPath", "--OUT_PATH",action="store",dest="OUT_PATH",type=str, default="/neuro/labs/grantlab/research/MRI_processing/jose.cisneros/CSFSegmentation/Results/FCB028/temp", help="output folder")
         parser.add_argument("-outCSF", "--OUT_CSF",action="store",dest="OUT_CSF",type=str, default="gmm_csf.nii", help="output binarize .nii file containing improved CSF")
         parser.add_argument("-verbose", "--VERBOSE",action="store",dest="VERBOSE",type=bool, default=True, help="Show logs")
