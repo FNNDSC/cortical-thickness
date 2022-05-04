@@ -1,7 +1,7 @@
 #!/bin/bash
 BASE_PATH=/neuro/labs/grantlab/research/MRI_processing
 TARGET_FILES=${1}
-RESOURCES_DIR=${BASE_PATH}/jose.cisneros/CSFSegmentation
+RESOURCES_DIR=${BASE_PATH}/jose.cisneros/CorticalThickness
 
 # Setup Dependencies
 LD_LIBRARY_PATH="${RESOURCES_DIR}/lib:"$LD_LIBRARY_PATH

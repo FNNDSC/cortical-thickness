@@ -40,10 +40,10 @@ class AlignNii():
 
     def argumentParser(self):
         parser = argparse.ArgumentParser("   ==========   Align Two Nii Files by Jose Cisneros (April 4), 2022 ver.1)   ==========   ")
-        parser.add_argument("-inPath", "--IN_PATH",action="store",dest="IN_PATH",type=str, default="/neuro/labs/grantlab/research/MRI_processing/jose.cisneros/CSFSegmentation/Results/FCB028/temp", help="input folder")
+        parser.add_argument("-inPath", "--IN_PATH",action="store",dest="IN_PATH",type=str, default="/neuro/labs/grantlab/research/MRI_processing/jose.cisneros/CorticalThickness/Results/FCB028/temp", help="input folder")
         parser.add_argument("-inNii", "--IN_NII",action="store",dest="IN_NII",type=str, default="mri.nii", help="input .nii file containing original MRI")
         parser.add_argument("-inTemplate", "--IN_TEMPLATE",action="store",dest="IN_TEMPLATE",type=str, default="skull_wm.nii", help="input binarize .nii file containing White Matter")
-        parser.add_argument("-outPath", "--OUT_PATH",action="store",dest="OUT_PATH",type=str, default="/neuro/labs/grantlab/research/MRI_processing/jose.cisneros/CSFSegmentation/Results/FCB028/output", help="output folder")
+        parser.add_argument("-outPath", "--OUT_PATH",action="store",dest="OUT_PATH",type=str, default="/neuro/labs/grantlab/research/MRI_processing/jose.cisneros/CorticalThickness/Results/FCB028/output", help="output folder")
         parser.add_argument("-outNii", "--OUT_NII",action="store",dest="OUT_NII",type=str, default="out.nii", help="output binarize .nii file aligned with template")
         parser.add_argument("-verbose", "--VERBOSE",action="store",dest="VERBOSE",type=bool, default=True, help="Show logs")
         self.args = parser.parse_args()

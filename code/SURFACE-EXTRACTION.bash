@@ -7,9 +7,9 @@ fi
 
 BASE_PATH=/neuro/labs/grantlab/research/MRI_processing
 CASE=${1} #FCB028
-BASE_DIR=${BASE_PATH}/jose.cisneros/CSFSegmentation/Samples # ${2}
-TARGET_DIR=${BASE_PATH}/jose.cisneros/CSFSegmentation/Results # ${3}
-RESOURCES_DIR=${BASE_PATH}/jose.cisneros/CSFSegmentation # ${3}
+BASE_DIR=${BASE_PATH}/jose.cisneros/CorticalThickness/Samples # ${2}
+TARGET_DIR=${BASE_PATH}/jose.cisneros/CorticalThickness/Results # ${3}
+RESOURCES_DIR=${BASE_PATH}/jose.cisneros/CorticalThickness # ${3}
 export RESOURCES_DIR
 
 INPUT_NAME=recon_to31
