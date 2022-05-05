@@ -5,11 +5,11 @@ if [ $# -lt 1 ]; then
   return
 fi
 
-BASE_PATH=/neuro/labs/grantlab/research/MRI_processing
-CASE=${1} #FCB028
-BASE_DIR=${BASE_PATH}/jose.cisneros/CorticalThickness/Samples # ${2}
-TARGET_DIR=${BASE_PATH}/jose.cisneros/CorticalThickness/Results # ${3}
-RESOURCES_DIR=${BASE_PATH}/jose.cisneros/CorticalThickness # ${3}
+CASE=${1}
+BASE_PATH=${2:-"/neuro/labs/grantlab/research/MRI_processing/jose.cisneros/CorticalThickness"}
+BASE_DIR=${BASE_PATH}/Samples
+TARGET_DIR=${BASE_PATH}/Results
+RESOURCES_DIR=${BASE_PATH}
 
 rm -rf ${TARGET_DIR}/${CASE}
 
@@ -19,18 +19,16 @@ mkdir -p ${TARGET_DIR}/${CASE}/input
 mkdir -p ${TARGET_DIR}/${CASE}/temp
 mkdir -p ${TARGET_DIR}/${CASE}/output
 
+INPUT_MRI_FILE=${3:-"${BASE_DIR}/${CASE}/recon_to31.nii"}
+INPUT_MRI_SEG_FILE=${4:-"${BASE_DIR}/${CASE}/segmentation_to31_final.nii"}
 
-INPUT_NAME=recon_to31
-INPUT_NAME_POSPROCESS=recon_to31_posprocess
-INPUT_SEG_NAME=segmentation_to31_final
-
-# Flag to do Surface Extraction.
-ENABLE_SURFACE_EXTRACTION=true
-# Flag to use Intensity Method for Skeleton Refinement.
-USE_INTENSITY=true
+# Flag to enable Surface Extraction.
+ENABLE_SURFACE_EXTRACTION=${5:-true}
+# Flag to enable Intensity Method for Skeleton Refinement.
+ENABLE_INTENSITY_REFINEMENT=${6:-true}
 # Clustering Method.
 CLUSTERING_METHODS=("GMM" "FCM" "sFCM")
-CLUSTERING_METHOD=${CLUSTERING_METHODS[2]}
+CLUSTERING_METHOD=${7:-${CLUSTERING_METHODS[2]}}
 
 # Setup Dependencies
 . neuro-fs stable 6.0;
@@ -58,26 +56,28 @@ EXT_RIGHT=42
 INT_RIGHT=160
 INT_LEFT=161
 
-# Conversion input from .nii to .mnc
-${RESOURCES_DIR}/bin/nii2mnc -clobber ${BASE_DIR}/${CASE}/${INPUT_NAME}.nii ${TARGET_DIR}/${CASE}/input/${INPUT_NAME}.mnc -float
-${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/input/${INPUT_NAME}.mnc ${TARGET_DIR}/${CASE}/input/${INPUT_NAME}.nii -float
-${RESOURCES_DIR}/bin/nii2mnc -clobber ${TARGET_DIR}/${CASE}/input/${INPUT_NAME}.nii ${TARGET_DIR}/${CASE}/input/${INPUT_NAME}.mnc -float
+# Prepare input files.
+cp $INPUT_MRI_FILE ${TARGET_DIR}/${CASE}/input/input_mri.nii
+cp $INPUT_MRI_SEG_FILE ${TARGET_DIR}/${CASE}/input/input_mri_seg.nii
+${RESOURCES_DIR}/bin/nii2mnc -clobber ${TARGET_DIR}/${CASE}/input/input_mri.nii ${TARGET_DIR}/${CASE}/input/input_mri.mnc -float
+${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/input/input_mri.mnc ${TARGET_DIR}/${CASE}/input/input_mri.nii -float
+${RESOURCES_DIR}/bin/nii2mnc -clobber ${TARGET_DIR}/${CASE}/input/input_mri.nii ${TARGET_DIR}/${CASE}/input/input_mri.mnc -float
 
-${RESOURCES_DIR}/bin/nii2mnc -clobber ${BASE_DIR}/${CASE}/${INPUT_SEG_NAME}.nii ${TARGET_DIR}/${CASE}/input/${INPUT_SEG_NAME}.mnc -float
-${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/input/${INPUT_SEG_NAME}.mnc ${TARGET_DIR}/${CASE}/input/${INPUT_SEG_NAME}.nii -float
-${RESOURCES_DIR}/bin/nii2mnc -clobber ${TARGET_DIR}/${CASE}/input/${INPUT_SEG_NAME}.nii ${TARGET_DIR}/${CASE}/input/${INPUT_SEG_NAME}.mnc -float
+${RESOURCES_DIR}/bin/nii2mnc -clobber ${TARGET_DIR}/${CASE}/input/input_mri_seg.nii ${TARGET_DIR}/${CASE}/input/input_mri_seg.mnc -float
+${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/input/input_mri_seg.mnc ${TARGET_DIR}/${CASE}/input/input_mri_seg.nii -float
+${RESOURCES_DIR}/bin/nii2mnc -clobber ${TARGET_DIR}/${CASE}/input/input_mri_seg.nii ${TARGET_DIR}/${CASE}/input/input_mri_seg.mnc -float
 
 # Segment and Join Cerebral Exterior Labels 1 & 42.
-mincmath -clobber -eq -const $EXT_LEFT ${TARGET_DIR}/${CASE}/input/${INPUT_SEG_NAME}.mnc ${TARGET_DIR}/${CASE}/temp/cerebral_left_ext.mnc
-mincmath -clobber -eq -const $EXT_RIGHT ${TARGET_DIR}/${CASE}/input/${INPUT_SEG_NAME}.mnc ${TARGET_DIR}/${CASE}/temp/cerebral_right_ext.mnc
+mincmath -clobber -eq -const $EXT_LEFT ${TARGET_DIR}/${CASE}/input/input_mri_seg.mnc ${TARGET_DIR}/${CASE}/temp/cerebral_left_ext.mnc
+mincmath -clobber -eq -const $EXT_RIGHT ${TARGET_DIR}/${CASE}/input/input_mri_seg.mnc ${TARGET_DIR}/${CASE}/temp/cerebral_right_ext.mnc
 mincmath -or ${TARGET_DIR}/${CASE}/temp/cerebral_left_ext.mnc ${TARGET_DIR}/${CASE}/temp/cerebral_right_ext.mnc ${TARGET_DIR}/${CASE}/temp/cerebral_ext.mnc -clobber
 
 # Dilation Cerebral Exterior
 mincmorph -filetype -successive D ${TARGET_DIR}/${CASE}/temp/cerebral_ext.mnc -clobber ${TARGET_DIR}/${CASE}/temp/cerebral_ext_d.mnc
 
 # Segment and Join Cerebral Interior Labels 160 & 161.
-mincmath -clobber -eq -const $INT_LEFT ${TARGET_DIR}/${CASE}/input/${INPUT_SEG_NAME}.mnc ${TARGET_DIR}/${CASE}/temp/cerebral_left_int.mnc
-mincmath -clobber -eq -const $INT_RIGHT ${TARGET_DIR}/${CASE}/input/${INPUT_SEG_NAME}.mnc ${TARGET_DIR}/${CASE}/temp/cerebral_right_int.mnc
+mincmath -clobber -eq -const $INT_LEFT ${TARGET_DIR}/${CASE}/input/input_mri_seg.mnc ${TARGET_DIR}/${CASE}/temp/cerebral_left_int.mnc
+mincmath -clobber -eq -const $INT_RIGHT ${TARGET_DIR}/${CASE}/input/input_mri_seg.mnc ${TARGET_DIR}/${CASE}/temp/cerebral_right_int.mnc
 mincmath -or ${TARGET_DIR}/${CASE}/temp/cerebral_left_int.mnc ${TARGET_DIR}/${CASE}/temp/cerebral_right_int.mnc ${TARGET_DIR}/${CASE}/temp/cerebral_int.mnc -clobber
 
 # Dilation Cerebral Interior
@@ -85,14 +85,14 @@ mincmorph -filetype -successive D ${TARGET_DIR}/${CASE}/temp/cerebral_int.mnc -c
 mincmath -not ${TARGET_DIR}/${CASE}/temp/cerebral_int_d.mnc ${TARGET_DIR}/${CASE}/temp/cerebral_int_d_not.mnc -clobber
 
 # Binarize all segmentations [from 1 to 161]
-mincmath -segment -const2 1 161 ${TARGET_DIR}/${CASE}/input/${INPUT_SEG_NAME}.mnc ${TARGET_DIR}/${CASE}/temp/initial_segmentations.mnc -clobber
+mincmath -segment -const2 1 161 ${TARGET_DIR}/${CASE}/input/input_mri_seg.mnc ${TARGET_DIR}/${CASE}/temp/initial_segmentations.mnc -clobber
 
 # Dilation Initial Segmentations
 mincmorph -filetype -successive D ${TARGET_DIR}/${CASE}/temp/initial_segmentations.mnc -clobber ${TARGET_DIR}/${CASE}/temp/initial_segmentations_d.mnc
 
 # Remove Cerebellum
 mincmorph -filetype -successive DDDDDDD ${TARGET_DIR}/${CASE}/temp/initial_segmentations.mnc -clobber ${TARGET_DIR}/${CASE}/temp/initial_segmentations_7_dilated.mnc
-minccalc -expression 'if(A[0]==1){out=A[1]}else{out=0}' ${TARGET_DIR}/${CASE}/temp/initial_segmentations_7_dilated.mnc ${TARGET_DIR}/${CASE}/input/${INPUT_NAME}.mnc ${TARGET_DIR}/${CASE}/input/${INPUT_NAME_POSPROCESS}.mnc -clobber
+minccalc -expression 'if(A[0]==1){out=A[1]}else{out=0}' ${TARGET_DIR}/${CASE}/temp/initial_segmentations_7_dilated.mnc ${TARGET_DIR}/${CASE}/input/input_mri.mnc ${TARGET_DIR}/${CASE}/input/input_mri_processed.mnc -clobber
 
 #############################################################
 ###################### START SKELETON #######################
@@ -154,14 +154,14 @@ mincmath -and ${TARGET_DIR}/${CASE}/temp/cerebral_int_d_not.mnc ${TARGET_DIR}/${
 #############################################################
 # CSF segmentation - Intensity clustering using GMM.
 
-if [ $CLUSTERING_METHOD = "GMM" ] && [ $USE_INTENSITY = true ]; then
+if [ $CLUSTERING_METHOD = "GMM" ] && [ $ENABLE_INTENSITY_REFINEMENT = true ]; then
     # GMM - Gaussian Mixture Model, Soft Clustering CSF/GM
     #### Prepare files
     ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/temp/clustering_input.mnc ${TARGET_DIR}/${CASE}/temp/clustering_input.nii
-    ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/input/${INPUT_NAME_POSPROCESS}.mnc ${TARGET_DIR}/${CASE}/temp/mri.nii
+    ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/input/input_mri_processed.mnc ${TARGET_DIR}/${CASE}/temp/mri.nii
 
     #### Call Script
-    python3 ${RESOURCES_DIR}/code/skeleton/gmm_clustering.py \
+    python3 ${RESOURCES_DIR}/code/skeleton/GMM.py \
         -inPath ${TARGET_DIR}/${CASE}/temp \
         -inMRI mri.nii \
         -inVOL clustering_input.nii \
@@ -178,11 +178,11 @@ fi
 #########################################################################
 # CSF segmentation - Intensity clustering using FCM.
 
-if [ $CLUSTERING_METHOD = "FCM" ] && [ $USE_INTENSITY = true ]; then
+if [ $CLUSTERING_METHOD = "FCM" ] && [ $ENABLE_INTENSITY_REFINEMENT = true ]; then
     # FCM - Fuzzy C Means, Soft Clustering CSF/GM
     #### Prepare files
     ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/temp/clustering_input.mnc ${TARGET_DIR}/${CASE}/temp/clustering_input.nii
-    ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/input/${INPUT_NAME_POSPROCESS}.mnc ${TARGET_DIR}/${CASE}/temp/mri.nii
+    ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/input/input_mri_processed.mnc ${TARGET_DIR}/${CASE}/temp/mri.nii
 
     #### Call Script
     python3 ${RESOURCES_DIR}/code/skeleton/MRI_FCM.py \
@@ -202,11 +202,11 @@ fi
 #########################################################################
 # CSF segmentation - Intensity clustering using sFCM.
 
-if [ $CLUSTERING_METHOD = "sFCM" ] && [ $USE_INTENSITY = true ]; then
+if [ $CLUSTERING_METHOD = "sFCM" ] && [ $ENABLE_INTENSITY_REFINEMENT = true ]; then
     # sFCM - Spatial Fuzzy C Means, Soft Clustering CSF/GM
     #### Prepare files
     ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/temp/clustering_input.mnc ${TARGET_DIR}/${CASE}/temp/clustering_input.nii
-    ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/input/${INPUT_NAME_POSPROCESS}.mnc ${TARGET_DIR}/${CASE}/temp/mri.nii
+    ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/input/input_mri_processed.mnc ${TARGET_DIR}/${CASE}/temp/mri.nii
 
     #### Call Script
     python3 ${RESOURCES_DIR}/code/skeleton/MRI_sFCM.py \
@@ -227,14 +227,14 @@ fi
 
 # Pial Surface Extraction, WM expansion. (Using GMM Intensity CSF defined by Intensity joined with skeleton)
 
-if [ $USE_INTENSITY = true ]; then
+if [ $ENABLE_INTENSITY_REFINEMENT = true ]; then
     #### Join Clustering Output with Skeleton limiting inner boundary to skeleton.
     mincmath -or ${TARGET_DIR}/${CASE}/temp/clustering_output.mnc ${TARGET_DIR}/${CASE}/temp/skeleton_2_corr.mnc -clobber ${TARGET_DIR}/${CASE}/temp/ps2_csf.mnc
     #### Prepare files
     ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/temp/ps2_csf.mnc ${TARGET_DIR}/${CASE}/temp/ps2_csf.nii
     ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/temp/cerebral_int.mnc ${TARGET_DIR}/${CASE}/temp/ps2_wm.nii
     ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/temp/cerebral_ext.mnc ${TARGET_DIR}/${CASE}/temp/ps2_gm.nii
-    ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/input/${INPUT_NAME_POSPROCESS}.mnc ${TARGET_DIR}/${CASE}/temp/mri.nii
+    ${RESOURCES_DIR}/bin/mnc2nii ${TARGET_DIR}/${CASE}/input/input_mri_processed.mnc ${TARGET_DIR}/${CASE}/temp/mri.nii
     #### Call Script
     python3 ${RESOURCES_DIR}/code/skeleton/pial_surface.py \
         -inPath ${TARGET_DIR}/${CASE}/temp \
@@ -262,8 +262,8 @@ fi
 #############################################################
 
 if [ $ENABLE_SURFACE_EXTRACTION = true ]; then
-    source ${RESOURCES_DIR}/code/WHITE-EXTRACTION.bash ${CASE}
-    source ${RESOURCES_DIR}/code/SURFACE-EXTRACTION.bash ${CASE}
+    source ${RESOURCES_DIR}/code/WHITE-EXTRACTION.bash ${CASE} ${BASE_PATH}
+    source ${RESOURCES_DIR}/code/SURFACE-EXTRACTION.bash ${CASE} ${BASE_PATH}
 fi
 #############################################################
 ################ END SURFACE EXTRACTION #####################
@@ -273,4 +273,4 @@ fi
 deactivate
 
 # Convert all mnc files to nii.
-source ${RESOURCES_DIR}/code/convertmnc.bash ${TARGET_DIR}/${CASE}/temp
+source ${RESOURCES_DIR}/code/utils/convertmnc.bash ${TARGET_DIR}/${CASE}/temp

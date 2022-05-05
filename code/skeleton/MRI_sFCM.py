@@ -35,6 +35,7 @@ class MRI_sFCM():
         self.run()
     
     def run(self):
+        self.showInfo("Start of sFCM - Clustering Process")
         mriDataFiltered = self.mriData * self.inData
         
         # Split Input Data, Value, Index

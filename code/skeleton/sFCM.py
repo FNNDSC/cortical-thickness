@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from matplotlib import colors
 
 class sFCM():
-    def __init__(self, n_clusters, min_error = 1e-5, max_iter = 500, verbose = True, kernel = "06"):
+    def __init__(self, n_clusters, min_error = 1e-5, max_iter = 500, verbose = True, kernel = "3D06"):
         self.n_clusters = n_clusters
         self.min_error = min_error
         self.max_iter = max_iter
@@ -34,7 +34,7 @@ class sFCM():
         avgX = X.copy()
         for i in range(self.n_clusters):
             for k in range(self.n_samples):
-                if self.kernel = "06":
+                if self.kernel == "3D06":
                     Fik[k][i], avgX[k] = self.Fik_06(i, k, X, _1DTo3D, _3DTo1D, map3D)
                 else:
                     Fik[k][i], avgX[k] = self.Fik_26(i, k, X, _1DTo3D, _3DTo1D, map3D)

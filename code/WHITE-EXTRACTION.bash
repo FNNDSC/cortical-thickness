@@ -5,23 +5,20 @@ if [ $# -lt 1 ]; then
   return
 fi
 
-BASE_PATH=/neuro/labs/grantlab/research/MRI_processing
-CASE=${1} #FCB028
-BASE_DIR=${BASE_PATH}/jose.cisneros/CorticalThickness/Samples # ${2}
-TARGET_DIR=${BASE_PATH}/jose.cisneros/CorticalThickness/Results # ${3}
-RESOURCES_DIR=${BASE_PATH}/jose.cisneros/CorticalThickness # ${3}
+CASE=${1}
+BASE_PATH=${2:-"/neuro/labs/grantlab/research/MRI_processing/jose.cisneros/CorticalThickness"}
+BASE_DIR=${BASE_PATH}/Samples
+TARGET_DIR=${BASE_PATH}/Results
+RESOURCES_DIR=${BASE_PATH}
 
-INPUT_NAME=recon_to31
-INPUT_NAME_POSPROCESS=recon_to31_posprocess
-INPUT_SEG_NAME=segmentation_to31_final
+LEFT=161
+RIGHT=160
 
 rm -rf ${TARGET_DIR}/${CASE}/surfaces
 mkdir -p ${TARGET_DIR}/${CASE}/surfaces
 
-LEFT=161
-RIGHT=160
-mincmath -clobber -eq -const $LEFT  ${TARGET_DIR}/${CASE}/input/${INPUT_SEG_NAME}.mnc ${TARGET_DIR}/${CASE}/temp/inner_left.mnc
-mincmath -clobber -eq -const $RIGHT ${TARGET_DIR}/${CASE}/input/${INPUT_SEG_NAME}.mnc ${TARGET_DIR}/${CASE}/temp/inner_right.mnc
+mincmath -clobber -eq -const $LEFT  ${TARGET_DIR}/${CASE}/input/input_mri_seg.mnc ${TARGET_DIR}/${CASE}/temp/inner_left.mnc
+mincmath -clobber -eq -const $RIGHT ${TARGET_DIR}/${CASE}/input/input_mri_seg.mnc ${TARGET_DIR}/${CASE}/temp/inner_right.mnc
 
 mincblur -clobber -fwhm 3 ${TARGET_DIR}/${CASE}/temp/inner_left.mnc ${TARGET_DIR}/${CASE}/temp/inner_left_fwhm;
 mincblur -clobber -fwhm 3 ${TARGET_DIR}/${CASE}/temp/inner_right.mnc ${TARGET_DIR}/${CASE}/temp/inner_right_fwhm;
