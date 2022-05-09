@@ -10,6 +10,7 @@ BASE_PATH=${2:-"/neuro/labs/grantlab/research/MRI_processing/jose.cisneros/Corti
 BASE_DIR=${BASE_PATH}/Samples
 TARGET_DIR=${BASE_PATH}/Results
 RESOURCES_DIR=${BASE_PATH}
+export RESOURCES_DIR
 
 LEFT=161
 RIGHT=160

@@ -48,4 +48,4 @@ RUN cd /tmp/mni-perllib \
     && make \
     && make install 
 
-ENTRYPOINT ["python3","/corticalThickness/code/corticalThickness.py"]
+ENTRYPOINT [ "/bin/bash", "-l", "-c" ]

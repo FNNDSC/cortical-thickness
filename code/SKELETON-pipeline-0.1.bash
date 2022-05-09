@@ -29,16 +29,22 @@ ENABLE_INTENSITY_REFINEMENT=${6:-true}
 # Clustering Method.
 CLUSTERING_METHODS=("GMM" "FCM" "sFCM")
 CLUSTERING_METHOD=${7:-${CLUSTERING_METHODS[2]}}
+# Running Script without Docker.
+OUTSIDE_DOCKER=${8:-true}
 
 # Setup Dependencies
-. neuro-fs stable 6.0;
-FSLDIR=/neuro/users/jose.cisneros/arch/Linux64/packages/fsl/6.0;
-. ${FSLDIR}/etc/fslconf/fsl.sh;
-PATH=${FSLDIR}/bin:${PATH};
-export FSLDIR PATH;
+if [ $OUTSIDE_DOCKER = true ]; then
+    . neuro-fs stable 6.0;
+    FSLDIR=/neuro/users/jose.cisneros/arch/Linux64/packages/fsl/6.0;
+    . ${FSLDIR}/etc/fslconf/fsl.sh;
+    PATH=${FSLDIR}/bin:${PATH};
+    export FSLDIR PATH;
+fi
 PATH="${RESOURCES_DIR}/bin:"$PATH
 LD_LIBRARY_PATH="${RESOURCES_DIR}/lib:"$LD_LIBRARY_PATH
 LD_LIBRARY_PATH="${RESOURCES_DIR}/bin/brainvisa-4.5.0/lib:"$LD_LIBRARY_PATH
+export PATH
+export LD_LIBRARY_PATH
 
 #### Python venv - activate
 source ${RESOURCES_DIR}/bin/pyenv/bin/activate
@@ -273,4 +279,4 @@ fi
 deactivate
 
 # Convert all mnc files to nii.
-source ${RESOURCES_DIR}/code/utils/convertmnc.bash ${TARGET_DIR}/${CASE}/temp
+source ${RESOURCES_DIR}/code/utils/convertmnc.bash ${TARGET_DIR}/${CASE}/temp ${BASE_PATH}

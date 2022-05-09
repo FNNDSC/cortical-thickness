@@ -1,7 +1,7 @@
 #!/bin/bash
-BASE_PATH=/neuro/labs/grantlab/research/MRI_processing
 TARGET_FILES=${1}
-RESOURCES_DIR=${BASE_PATH}/jose.cisneros/CorticalThickness
+BASE_PATH=${2:-"/neuro/labs/grantlab/research/MRI_processing/jose.cisneros/CorticalThickness"}
+RESOURCES_DIR=${BASE_PATH}
 
 # Setup Dependencies
 LD_LIBRARY_PATH="${RESOURCES_DIR}/lib:"$LD_LIBRARY_PATH

@@ -18,5 +18,5 @@ $DOCKER_COMMAND -it -d\
     $DOCKER_NETWORK_ARGS \
     --privileged \
     --name=cortical-thickness-test \
-    cortical-thickness-b \
+    cortical-thickness \
     bash

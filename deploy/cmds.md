@@ -7,40 +7,25 @@ Ex.
 BASE_PATH=${1:-"/neuro/labs/grantlab/research/MRI_processing/jose.cisneros/CorticalThickness"}
 ```
 
-# Bash Environment
-
-## 1-. Create Image with Bash Entrypoint. 
+## Usage Example
+Output Folder: {BASE_PATH}/Results/{CASE}
 ```
-docker build -t cortical-thickness-b ${BASE_PATH} -f ${BASE_PATH}/deploy/Dockerfile.bash
-```
-## 2-. Create Container for cortical-thickness image.
-```
-${BASE_PATH}/deploy/runBash.sh
-```
-## 3-. Enter cortical-thickness container bash.
-```
-docker exec -it cortical-thickness-test bash
+${BASE_PATH}/code/corticalThickness.py \
+    -ca FCB028 \
+    -im ${BASE_PATH}/Samples/FCB028/recon_to31.nii \
+    -is ${BASE_PATH}/Samples/FCB028/segmentation_to31_final.nii \
 ```
 
-# Python Entrypoint
-
-## 1-. Create Image with Python Entrypoint. 
+## Usage Example with Docker
+Args Documentation:
 ```
-docker build -t cortical-thickness ${BASE_PATH} -f ${BASE_PATH}/deploy/Dockerfile
-```
-## 2-. Call Script in temporary Container using cortical-thickness image.
-See optional arguments:
-```
-docker run cortical-thickness -v ${BASE_PATH}:/CorticalThickness -h
+${BASE_PATH}/code/corticalThicknessDocker.py -h
 ```
 
-See optional arguments:
 ```
-docker run cortical-thickness -v ${BASE_PATH}:/CorticalThickness -h
-```
-
-Ex.
-
-```
-docker run cortical-thickness -v ${BASE_PATH}:/CorticalThickness -ca FCB028
+${BASE_PATH}/code/corticalThicknessDocker.py \
+    -ca FCB028 \
+    -im ${BASE_PATH}/Samples/FCB028/recon_to31.nii \
+    -is ${BASE_PATH}/Samples/FCB028/segmentation_to31_final.nii \
+    -o ${BASE_PATH}/Results
 ```
