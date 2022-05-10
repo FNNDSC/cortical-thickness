@@ -71,3 +71,12 @@ ${RESOURCES_DIR}/code/surfaceExtraction/expand_from_white_fetal.pl -right \
   ${TARGET_DIR}/${CASE}/surfaces/rh.smoothwm.to31.obj \
   ${TARGET_DIR}/${CASE}/surfaces/rh.pial.native_81920.obj \
   ${TARGET_DIR}/${CASE}/surfaces/laplacian_to31_right_fixed.mnc;
+
+${RESOURCES_DIR}/bin/mesh_to_std_format.pl -left ${TARGET_DIR}/${CASE}/surfaces/lh.pial.native_81920.obj ${TARGET_DIR}/${CASE}/surfaces/lh.pial.native.to31.obj;
+${RESOURCES_DIR}/bin/mesh_to_std_format.pl -right ${TARGET_DIR}/${CASE}/surfaces/rh.pial.native_81920.obj ${TARGET_DIR}/${CASE}/surfaces/rh.pial.native.to31.obj;
+${RESOURCES_DIR}/bin/transform_objects ${TARGET_DIR}/${CASE}/surfaces/lh.pial.native.to31.obj ${RESOURCES_DIR}/share/surftmat.xfm ${TARGET_DIR}/${CASE}/surfaces/lh.pial.native.obj;
+${RESOURCES_DIR}/bin/transform_objects ${TARGET_DIR}/${CASE}/surfaces/rh.pial.native.to31.obj ${RESOURCES_DIR}/share/surftmat.xfm ${TARGET_DIR}/${CASE}/surfaces/rh.pial.native.obj;
+
+# Freesurfer format
+${RESOURCES_DIR}/bin/obj2asc ${TARGET_DIR}/${CASE}/surfaces/lh.pial.native.obj ${TARGET_DIR}/${CASE}/surfaces/lh.pial.native.asc;
+${RESOURCES_DIR}/bin/obj2asc ${TARGET_DIR}/${CASE}/surfaces/rh.pial.native.obj ${TARGET_DIR}/${CASE}/surfaces/rh.pial.native.asc;

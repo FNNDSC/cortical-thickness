@@ -28,8 +28,8 @@ ${RESOURCES_DIR}/bin/extract_white_surface_fetus_new.pl ${TARGET_DIR}/${CASE}/te
 ${RESOURCES_DIR}/bin/extract_white_surface_fetus_new.pl ${TARGET_DIR}/${CASE}/temp/inner_right_fwhm_blur.mnc ${TARGET_DIR}/${CASE}/temp/rh.white.obj 0.5;
 ${RESOURCES_DIR}/bin/mesh_to_std_format.pl -left ${TARGET_DIR}/${CASE}/temp/lh.white_20480.obj ${TARGET_DIR}/${CASE}/surfaces/lh.smoothwm.to31.obj;
 ${RESOURCES_DIR}/bin/mesh_to_std_format.pl -right ${TARGET_DIR}/${CASE}/temp/rh.white_20480.obj ${TARGET_DIR}/${CASE}/surfaces/rh.smoothwm.to31.obj;
-${RESOURCES_DIR}/bin/transform_objects ${TARGET_DIR}/${CASE}/surfaces/lh.smoothwm.to31.obj /neuro/labs/grantlab/research/MRI_processing/valeria.cruz/mri_data/surftmat.xfm ${TARGET_DIR}/${CASE}/surfaces/lh.smoothwm.native.obj;
-${RESOURCES_DIR}/bin/transform_objects ${TARGET_DIR}/${CASE}/surfaces/rh.smoothwm.to31.obj /neuro/labs/grantlab/research/MRI_processing/valeria.cruz/mri_data/surftmat.xfm ${TARGET_DIR}/${CASE}/surfaces/rh.smoothwm.native.obj;
+${RESOURCES_DIR}/bin/transform_objects ${TARGET_DIR}/${CASE}/surfaces/lh.smoothwm.to31.obj ${RESOURCES_DIR}/share/surftmat.xfm ${TARGET_DIR}/${CASE}/surfaces/lh.smoothwm.native.obj;
+${RESOURCES_DIR}/bin/transform_objects ${TARGET_DIR}/${CASE}/surfaces/rh.smoothwm.to31.obj ${RESOURCES_DIR}/share/surftmat.xfm ${TARGET_DIR}/${CASE}/surfaces/rh.smoothwm.native.obj;
 # Freesurfer format
 ${RESOURCES_DIR}/bin/obj2asc ${TARGET_DIR}/${CASE}/surfaces/lh.smoothwm.native.obj ${TARGET_DIR}/${CASE}/surfaces/lh.smoothwm.native.asc;
 ${RESOURCES_DIR}/bin/obj2asc ${TARGET_DIR}/${CASE}/surfaces/rh.smoothwm.native.obj ${TARGET_DIR}/${CASE}/surfaces/rh.smoothwm.native.asc;
