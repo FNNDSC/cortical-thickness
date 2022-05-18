@@ -31,7 +31,7 @@ Output Folder: {BASE_PATH}/Results/{CASE}
 ${BASE_PATH}/code/corticalThickness.py \
     -ca FCB028 \
     -im ${BASE_PATH}/Samples/FCB028/recon_to31.nii \
-    -is ${BASE_PATH}/Samples/FCB028/segmentation_to31_final.nii \
+    -is ${BASE_PATH}/Samples/FCB028/segmentation_to31_final.nii
 ```
 
 ## Usage Example with Docker

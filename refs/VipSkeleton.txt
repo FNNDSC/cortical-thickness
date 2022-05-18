@@ -1,1 +1,73 @@
-https://brainvisa.info/index_commands.html#morphologist-nonfree_VipSkeleton
+Vip Skeleton Documentation
+Ref: https://brainvisa.info/index_commands.html#morphologist-nonfree_VipSkeleton
+
+VipSkeleton
+
+------------------------------
+VIP Info:
+	 Compute a 3D skeleton of the object (usually dedicated to cortical folds)
+------------------------------
+Default modes are dedicated to the cortex (input comes from VipHomotopicSnake)
+In that case, a voronoi related to sulcal root is also proposed.
+
+Usage: VipSkeleton
+        -i[nput] {image name} : object definition
+        [-so[utput] {image name (default:"skeleton")}]
+        [-vo[utput] {image name (default:"rootsvoronoi")}]
+        [-sk[eleton] {w/s/0  (default:w)}]
+w: the skeletonization is coupled with the watershed idea
+   this mode is dedicated to the cortical fold extraction
+   this mode requires an image to compute its mean curvature as a ridge detector
+   The aim is an homotopic skeleton following the ridges
+s: standard homotopic skeletomization
+0: no skeletonization
+        [-im[mortality] {string:a/s/c/n (default:s)}]
+property required to be preserved during the homotopic skeletonization
+a: homotopic with full preservation of points, curves and surfaces
+s: homotopic with full preservation of points and surfaces
+c: homotopic with full preservation of points and curves
+n: homotopic with no preservation
+        [-fv[oronoi] {y/n  (default:y)}]
+Computes a voronoi of the input object corresponding to a sulcal root based parcellisation
+this mode requires an image to compute its Gaussian curvature as a saddle point detector
+This saddle points represent the anatomical plis de passage
+        [-p[rune] {string:c/o/co/0 (default:co)}]
+c: homotopic pruning of curves
+o: homotopic pruning of outside 6-neighbors
+co: c & o
+0: no pruning
+        [-wp[rune] {int:minimum catchment bassin depth (default:3mm)}]
+        [-li[nside] {int:label<290 (default:0)}]
+        [-lo[utside] {int:label<290 (default:11)}]
+        [-c[lassification] {y/n (default:y)}]
+this flag trigered a final topological classification of the skeleton
+        [-g[eometry] {image name (default:nothing)}]
+--------------------------Mean curvature:-----------------------------------------
+with watershed flag trigered, the watershed idea is related to the isophote mean
+curvature of this image, which is usually a MR image with segmented brain
+but could be the input binary image or a distance map computed from it
+In this context, mean curvature is used as a ridge detector
+During the first iterations, points whose mc < mcthreshold can not become immortals
+This trick helps the skeletonization to get rid of small non significative simple surfaces
+The skeletonization itself follows an immersion like process begining above mcthreshold
+--------------------------Gaussian curvature:-----------------------------------------
+with voronoi flag trigered, this image is used to compute isophote Gaussian curvature
+Then points of the gray/white interface whose gc<gcthreshold are marked
+The cortical folds are filled in at this location to reduce depth
+        [-lz[ero] {(float) lowest mean curvature for watershed (default:0.3)}]
+        [-lu[p] {(float) highest mean curvature for watershed(default:1)}]
+        [-e[rosion] {(float) wave erosion for watershed (default:0.1)}]
+        [-readmc {mean_curvature image name (default:nothing)}]
+        [-mcs[igma] {float (mm)  (default:1mm)}]
+the sigma of the Gaussian smoothing before mean curvature computation
+        [-gcs[igma] {float (mm)  (default:2mm)}]
+the sigma of the Gaussian smoothing before Gaussian curvature computation
+        [-mct[hreshold] {float (default:0.2)}]
+        [-gct[hreshold] {float (default:-0.05)}]
+cf. geometry help
+        [-ve[rsion] {int, version depending on the hemi_cortex version, 1 or 2 (default: 2)}]
+        [-r[eadformat] {char: v or t (default:v)}]
+        [-w[riteformat] {char: v or t (default:v)}]
+       [-srand {int (default: time}]
+Initialization of the random seed, useful to get reproducible results
+        [-h[elp]

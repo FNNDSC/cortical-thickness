@@ -33,7 +33,8 @@ class CorticalThickness():
                     + parseArg(self.args.ENABLE_SURFACE_EXTRACTION) + " " \
                     + parseArg(self.args.ENABLE_INTENSITY_REFINEMENT) + " " \
                     + parseArg(self.args.INTENSITY_CLUSTERING_METHOD) + " " \
-                    + parseArg(self.args.OUTSIDE_DOCKER) + "\'"
+                    + parseArg(self.args.OUTSIDE_DOCKER) + " " \
+                    + parseArg(self.args.RESULTS_PREFIX) + "\'"
         process = subprocess.call([bashCommand], stderr=sys.stderr, stdout=sys.stdout, shell=True)
 
     def argumentParser(self):
@@ -42,10 +43,11 @@ class CorticalThickness():
         parser.add_argument("-bp", "--base-path",action="store",dest="BASE_PATH",type=str, default="/neuro/labs/grantlab/research/MRI_processing/jose.cisneros/CorticalThickness", help="Path containing code & resources.")
         parser.add_argument("-im", "--input-mri",action="store",dest="IN_MRI",type=str, default="", help="Input MRI .nii file path.")
         parser.add_argument("-is", "--input-segmented",action="store",dest="IN_MRI_SEG",type=str, default="", help="Input MRI segmented .nii file path.")
-        parser.add_argument("-se", "--surface-extraction",action="store",dest="ENABLE_SURFACE_EXTRACTION",type=boolean_string, default=True, help="Enable Surface Extraction")
-        parser.add_argument("-ir", "--intensity-refinement",action="store",dest="ENABLE_INTENSITY_REFINEMENT",type=boolean_string, default=True, help="Enable Intensity Clustering for CP external boundary refinement.")
-        parser.add_argument("-do", "--outside-docker",action="store",dest="OUTSIDE_DOCKER",type=boolean_string, default=True, help="Flag indicating if script running outside docker.")
-        parser.add_argument("-icm", "--intensity-clustering-method",action="store",dest="INTENSITY_CLUSTERING_METHOD",type=str, default="sFCM", help="Soft Clustering Method use for Intensity Refinement. Options: GMM, FCM, sFCM")
+        parser.add_argument("-se", "--surface-extraction",action="store",dest="ENABLE_SURFACE_EXTRACTION",type=boolean_string, default=True, help="Enable Surface Extraction (default: %(default)s)")
+        parser.add_argument("-ir", "--intensity-refinement",action="store",dest="ENABLE_INTENSITY_REFINEMENT",type=boolean_string, default=True, help="Enable Intensity Clustering for CP external boundary refinement. (default: %(default)s)")
+        parser.add_argument("-do", "--outside-docker",action="store",dest="OUTSIDE_DOCKER",type=boolean_string, default=True, help="Flag indicating if script running outside docker. (default: %(default)s)")
+        parser.add_argument("-rp", "--results-prefix",action="store",dest="RESULTS_PREFIX",type=str, default="", help="Prefix for Results folder. (default: %(default)s)")
+        parser.add_argument("-icm", "--intensity-clustering-method",action="store",dest="INTENSITY_CLUSTERING_METHOD",type=str, default="sFCM", help="Soft Clustering Method use for Intensity Refinement. Options: GMM, FCM, sFCM (default: %(default)s)")
         self.args = parser.parse_args()
 
 CorticalThickness()

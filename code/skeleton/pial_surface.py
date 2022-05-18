@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Pial Surface extraction expanding White Matter till CSF.
+Pial Surface extraction getting inner boundary of CSF expanding White Matter till CSF.
 Made by Jose Cisneros, March 21 2022
 """
 import os

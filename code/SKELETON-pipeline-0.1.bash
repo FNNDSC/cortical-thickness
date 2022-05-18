@@ -5,10 +5,11 @@ if [ $# -lt 1 ]; then
   return
 fi
 
+RESULTS_PREFIX=${9:-}
 CASE=${1}
 BASE_PATH=${2:-"/neuro/labs/grantlab/research/MRI_processing/jose.cisneros/CorticalThickness"}
 BASE_DIR=${BASE_PATH}/Samples
-TARGET_DIR=${BASE_PATH}/Results
+TARGET_DIR=${BASE_PATH}/${RESULTS_PREFIX}Results
 RESOURCES_DIR=${BASE_PATH}
 
 rm -rf ${TARGET_DIR}/${CASE}
@@ -269,8 +270,8 @@ fi
 #############################################################
 
 if [ $ENABLE_SURFACE_EXTRACTION = true ]; then
-    source ${RESOURCES_DIR}/code/WHITE-EXTRACTION.bash ${CASE} ${BASE_PATH}
-    source ${RESOURCES_DIR}/code/SURFACE-EXTRACTION.bash ${CASE} ${BASE_PATH}
+    source ${RESOURCES_DIR}/code/WHITE-EXTRACTION.bash ${CASE} ${BASE_PATH} ${RESULTS_PREFIX}
+    source ${RESOURCES_DIR}/code/SURFACE-EXTRACTION.bash ${CASE} ${BASE_PATH} ${RESULTS_PREFIX}
 fi
 #############################################################
 ################ END SURFACE EXTRACTION #####################

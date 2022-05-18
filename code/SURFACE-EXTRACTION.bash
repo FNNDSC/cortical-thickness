@@ -5,15 +5,16 @@ if [ $# -lt 1 ]; then
   return
 fi
 
+RESULTS_PREFIX=${3:-}
 CASE=${1}
 BASE_PATH=${2:-"/neuro/labs/grantlab/research/MRI_processing/jose.cisneros/CorticalThickness"}
 BASE_DIR=${BASE_PATH}/Samples
-TARGET_DIR=${BASE_PATH}/Results
+TARGET_DIR=${BASE_PATH}/${RESULTS_PREFIX}Results
 RESOURCES_DIR=${BASE_PATH}
 export RESOURCES_DIR
 
 INPUT_SKELETON=${TARGET_DIR}/${CASE}/output/skeleton_output.mnc
-USE_SKELETON=true
+USE_SKELETON=true # False to extract surface using deeplearning segementation external boundary.
 
 if [ "$USE_SKELETON" = true ] ; then
   # Remove Skeleton Intersection from CP.
