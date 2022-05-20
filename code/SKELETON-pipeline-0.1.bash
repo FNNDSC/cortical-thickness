@@ -9,8 +9,10 @@ RESULTS_PREFIX=${9:-}
 CASE=${1}
 BASE_PATH=${2:-"/neuro/labs/grantlab/research/MRI_processing/jose.cisneros/CorticalThickness"}
 BASE_DIR=${BASE_PATH}/Samples
-TARGET_DIR=${BASE_PATH}/${RESULTS_PREFIX}Results
 RESOURCES_DIR=${BASE_PATH}
+INPUT_DIR=${3:-"${BASE_DIR}/${CASE}"}
+OUTPUT_DIR=${4:-"${BASE_PATH}/"}
+TARGET_DIR=${OUTPUT_DIR}/${RESULTS_PREFIX}Results
 
 rm -rf ${TARGET_DIR}/${CASE}
 
@@ -21,8 +23,17 @@ mkdir -p ${TARGET_DIR}/${CASE}/temp
 mkdir -p ${TARGET_DIR}/${CASE}/morphometrics
 mkdir -p ${TARGET_DIR}/${CASE}/output
 
-INPUT_MRI_FILE=${3:-"${BASE_DIR}/${CASE}/recon_to31.nii"}
-INPUT_MRI_SEG_FILE=${4:-"${BASE_DIR}/${CASE}/segmentation_to31_final.nii"}
+INPUT_MRI_FILE=$(find $INPUT_DIR -name "recon_to31_nuc.nii")
+INPUT_MRI_SEG_FILE=$(find $INPUT_DIR -name "segmentation_to31_final.nii")
+
+if [ -z "$INPUT_MRI_FILE" ]; then
+  echo "recon_to31_nuc.nii file not found inside $INPUT_DIR"
+  return
+fi
+if [ -z "$INPUT_MRI_SEG_FILE" ]; then
+  echo "segmentation_to31_final.nii file not found inside $INPUT_DIR"
+  return
+fi
 
 # Flag to enable Surface Extraction.
 ENABLE_SURFACE_EXTRACTION=${5:-true}
@@ -270,8 +281,8 @@ fi
 #############################################################
 
 if [ $ENABLE_SURFACE_EXTRACTION = true ]; then
-    source ${RESOURCES_DIR}/code/WHITE-EXTRACTION.bash ${CASE} ${BASE_PATH} ${RESULTS_PREFIX}
-    source ${RESOURCES_DIR}/code/SURFACE-EXTRACTION.bash ${CASE} ${BASE_PATH} ${RESULTS_PREFIX}
+    source ${RESOURCES_DIR}/code/WHITE-EXTRACTION.bash ${CASE} ${BASE_PATH} ${TARGET_DIR}
+    source ${RESOURCES_DIR}/code/SURFACE-EXTRACTION.bash ${CASE} ${BASE_PATH} ${TARGET_DIR}
 fi
 #############################################################
 ################ END SURFACE EXTRACTION #####################

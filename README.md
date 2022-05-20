@@ -1,4 +1,4 @@
-# FNNDSC - Cortical Thickness
+# Cortical Thickness
 
 ## Description
 This repository includes the code capable of extracting the cortical surface and calculating the cortical thickness given the deeplearning initial segmentations of GM and WM.

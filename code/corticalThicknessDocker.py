@@ -29,15 +29,14 @@ class CorticalThickness():
         bashCommand = self.args.BASE_PATH + "/deploy/runBash.sh"
         process = subprocess.run([bashCommand], stderr=sys.stderr, stdout=sys.stdout, shell=True)
         # Copy Input Files
-        bashCommand = "docker cp " + self.args.IN_MRI +  " cortical-thickness-test:/tmp/in_mri.nii && " \
-                    + "docker cp " + self.args.IN_MRI_SEG +  " cortical-thickness-test:/tmp/in_mri_seg.nii"
+        bashCommand = "docker cp " + self.args.IN_MRI +  " cortical-thickness-test:/tmp/recon_to31_nuc.nii && " \
+                    + "docker cp " + self.args.IN_MRI_SEG +  " cortical-thickness-test:/tmp/segmentation_to31_final.nii"
         process = subprocess.run([bashCommand], stderr=sys.stderr, stdout=sys.stdout, shell=True)
         # Run Script
         bashCommand = "docker exec cortical-thickness-test python3 /corticalThickness/code/corticalThickness.py " \
                     + "-ca " + parseArg(self.args.CASE) + " " \
                     + "-bp  /corticalThickness " \
-                    + "-im  /tmp/in_mri.nii " \
-                    + "-is  /tmp/in_mri_seg.nii " \
+                    + "-id  /tmp/ " \
                     + "-se " + parseArg(self.args.ENABLE_SURFACE_EXTRACTION) + " " \
                     + "-ir " + parseArg(self.args.ENABLE_INTENSITY_REFINEMENT) + " " \
                     + "-do False " \

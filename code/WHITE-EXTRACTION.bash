@@ -5,11 +5,10 @@ if [ $# -lt 1 ]; then
   return
 fi
 
-RESULTS_PREFIX=${3:-}
 CASE=${1}
 BASE_PATH=${2:-"/neuro/labs/grantlab/research/MRI_processing/jose.cisneros/CorticalThickness"}
 BASE_DIR=${BASE_PATH}/Samples
-TARGET_DIR=${BASE_PATH}/${RESULTS_PREFIX}Results
+TARGET_DIR=${3:-${BASE_PATH}/Results}
 RESOURCES_DIR=${BASE_PATH}
 export RESOURCES_DIR
 
