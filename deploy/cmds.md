@@ -18,11 +18,11 @@ docker build -t cortical-thickness ${BASE_PATH} -f ${BASE_PATH}/deploy/Dockerfil
 # Login.
 docker login ghcr.io
 # Build your image if it doesn't exist yet.
-docker build -t ghcr.io/josecisneros001/FNNDSC-Cortical-Thickness .
+docker build -t ghcr.io/fnndsc/cortical-thickness .
 # Tag it if already exists.
-docker tag cortical-thickness ghcr.io/josecisneros001/fnndsc-cortical-thickness
+docker tag cortical-thickness ghcr.io/fnndsc/cortical-thickness
 # Upload.
-docker push ghcr.io/josecisneros001/fnndsc-cortical-thickness
+docker push ghcr.io/fnndsc/cortical-thickness
 ```
 
 ## Usage Example

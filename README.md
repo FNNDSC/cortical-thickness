@@ -23,7 +23,7 @@ BASE_PATH=/neuro/labs/grantlab/research/MRI_processing/jose.cisneros/CorticalThi
 Using Docker:
 - Repository
 ```
-    git clone https://github.com/Josecisneros001/fnndsc-cortical-thickness.git
+    git clone https://github.com/FNNDSC/cortical-thickness.git
 ```
 - Ubuntu
 - Docker Engine
@@ -33,21 +33,21 @@ Using Docker:
         # Option 1:
         docker build -t cortical-thickness ${BASE_PATH} -f ${BASE_PATH}/deploy/Dockerfile
         # Option 2:
-        docker pull ghcr.io/josecisneros001/fnndsc-cortical-thickness
-        docker tag ghcr.io/josecisneros001/fnndsc-cortical-thickness cortical-thickness
+        docker pull ghcr.io/fnndsc/cortical-thickness
+        docker tag ghcr.io/fnndsc/cortical-thickness cortical-thickness
     ```
 Without Docker:
 - Repository
 ```
-    git clone https://github.com/Josecisneros001/fnndsc-cortical-thickness.git
+    git clone https://github.com/FNNDSC/cortical-thickness.git
 ```
 - Ubuntu
 - All Dependencies declared in bin, lib & share folders.
     - Dependencies can be obtained from the original code or from the published Docker Image following this steps:
     ```
         # Pull Image from Container Registry.
-        docker pull ghcr.io/josecisneros001/fnndsc-cortical-thickness
-        docker tag ghcr.io/josecisneros001/fnndsc-cortical-thickness cortical-thickness
+        docker pull ghcr.io/fnndsc/cortical-thickness
+        docker tag ghcr.io/fnndsc/cortical-thickness cortical-thickness
 
         # Create cortical-thickness-test container using cortical-thickness image.
         source $BASE_PATH/deploy/runBash.sh
@@ -104,9 +104,9 @@ ${BASE_PATH}/code/corticalThicknessDocker.py \
 # Login.
 docker login ghcr.io
     # Option1: Build your image if it doesn't exist yet.
-    docker build -t ghcr.io/josecisneros001/FNNDSC-Cortical-Thickness .
+    docker build -t ghcr.io/fnndsc/cortical-thickness .
     # Option2: Tag it if already exists.
-    docker tag cortical-thickness ghcr.io/josecisneros001/fnndsc-cortical-thickness
+    docker tag cortical-thickness ghcr.io/fnndsc/cortical-thickness
 # Upload.
-docker push ghcr.io/josecisneros001/fnndsc-cortical-thickness
+docker push ghcr.io/fnndsc/cortical-thickness
 ```
